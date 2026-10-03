@@ -1,0 +1,201 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_DATABASE_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum OrderStatus {
+  PENDING
+  PAID
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentProvider {
+  STRIPE
+  CHAPA
+  DEMO
+}
+
+model Category {
+  id       String    @id @default(cuid())
+  slug     String    @unique
+  name     String
+  products Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  description String
+  image       String
+  active      Boolean   @default(true)
+  categoryId  String
+  category    Category  @relation(fields: [categoryId], references: [id])
+  variants    Variant[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([categoryId, active])
+  @@map("products")
+}
+
+model Variant {
+  id         String     @id @default(cuid())
+  productId  String
+  product    Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku        String     @unique
+  name       String
+  priceCents Int
+  stock      Int
+  cartItems  CartItem[]
+  orderItems OrderItem[]
+
+  @@index([productId])
+  @@map("variants")
+}
+
+model Cart {
+  id        String     @id @default(cuid())
+  sessionId String     @unique
+  items     CartItem[]
+  updatedAt DateTime   @updatedAt
+
+  @@map("carts")
+}
+
+model CartItem {
+  cartId     String
+  variantId  String
+  quantity   Int
+  addedAt    DateTime @default(now())
+  cart       Cart      @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  variant    Variant   @relation(fields: [variantId], references: [id], onDelete: Cascade)
+
+  @@id([cartId, variantId])
+  @@map("cart_items")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         Role      @default(CUSTOMER)
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+  orders       Order[]
+
+  @@map("users")
+}
+
+/// Server-side session. Only the SHA-256 hash of the cookie token is stored.
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("sessions")
+}
+
+model Order {
+  id                String           @id @default(cuid())
+  reference         String           @unique
+  userId            String?
+  user              User?            @relation(fields: [userId], references: [id])
+  email             String
+  fullName         String?
+  phone            String?
+  addressLine      String?
+  city             String?
+  country          String?
+  status            OrderStatus      @default(PENDING)
+  subtotalCents     Int
+  shippingCents     Int
+  totalCents        Int
+  provider          PaymentProvider
+  providerSessionId String?          @unique
+  providerReference String?
+  currency          String           @default("USD")
+  reservedAt        DateTime         @default(now())
+  expiresAt         DateTime
+  paidAt            DateTime?
+  shippedAt         DateTime?
+  deliveredAt       DateTime?
+  cancelledAt       DateTime?
+  lookupTokenHash   String?
+  items             OrderItem[]
+  events            OrderEvent[]
+
+  @@index([status, reservedAt])
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@map("orders")
+}
+
+/// Immutable line items: the unit price is copied at purchase time.
+model OrderItem {
+  id             String  @id @default(cuid())
+  orderId        String
+  variantId      String
+  sku            String
+  title          String
+  variantName    String
+  unitPriceCents Int
+  quantity       Int
+  order          Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  variant        Variant @relation(fields: [variantId], references: [id])
+
+  @@index([orderId])
+  @@index([variantId])
+  @@map("order_items")
+}
+
+/// Audit trail: every status transition, including rejected ones.
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  from       OrderStatus?
+  to         OrderStatus?
+  actor      String
+  note       String?
+  createdAt  DateTime     @default(now())
+  order      Order        @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
+  @@map("order_events")
+}
+
+/// Idempotency ledger for payment webhooks. (provider, externalId) is unique,
+/// so a retried delivery is recorded once and never re-applied.
+model PaymentEvent {
+  id           String          @id @default(cuid())
+  provider     PaymentProvider
+  externalId   String
+  type         String
+  orderId      String?
+  payload      Json
+  processedAt  DateTime        @default(now())
+
+  @@unique([provider, externalId])
+  @@index([orderId])
+  @@map("payment_events")
+}

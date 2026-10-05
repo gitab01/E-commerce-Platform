@@ -94,12 +94,6 @@ export async function clearCart(): Promise<{ ok: true }> {
   return { ok: true };
 }
 
-/** Stock moved while a page was cached: drop the stale ISR render for that product. */
-export function revalidateProductSlug(slug: string) {
-  revalidatePath(`/products/${slug}`);
-  revalidatePath('/products');
-}
-
 export async function reorderFromOrder(rawReference: unknown): Promise<{ added: number; skipped: number }> {
   const reference = z.string().min(4).max(12).safeParse(String(rawReference ?? ''));
   if (!reference.success) return { added: 0, skipped: 0 };

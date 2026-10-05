@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache';
 import { prisma } from './db';
 
 export const CATALOG_REVALIDATE_SECONDS = 60;
@@ -41,4 +42,10 @@ export function leadVariant<T extends { priceCents: number; stock: number }>(var
 
 export function totalStock(variants: { stock: number }[]) {
   return variants.reduce((sum, variant) => sum + variant.stock, 0);
+}
+
+/** Stock moved while a page was cached: drop the stale ISR render for that product. */
+export function revalidateProductSlug(slug: string) {
+  revalidatePath(`/products/${slug}`);
+  revalidatePath('/products');
 }

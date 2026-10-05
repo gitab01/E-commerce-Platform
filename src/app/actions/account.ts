@@ -6,7 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
 import { hashPassword, verifyPassword, startSession, destroySession, currentUser } from '@/lib/auth';
 import { advanceOrder, reconcileStaleReservations } from '@/lib/fulfillment';
-import { revalidateProductSlug } from './cart';
+import { revalidateProductSlug } from '@/lib/catalog';
 import type { OrderStatus } from '@prisma/client';
 
 const credentialsSchema = z.object({

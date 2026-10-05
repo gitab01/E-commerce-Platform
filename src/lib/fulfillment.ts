@@ -1,5 +1,5 @@
 import { Prisma, type Order, type OrderStatus, type PaymentProvider } from '@prisma/client';
-import { prisma } from './db';
+import { prisma, MONEY_TX } from './db';
 import { assertTransition, IllegalTransition } from './order-state';
 import { getGateway } from './payments';
 
@@ -49,7 +49,7 @@ export async function markOrderPaid(args: {
       await tx.orderEvent.create({
         data: { orderId: order.id, from: order.status, to: 'PAID', actor: `webhook:${args.provider.toLowerCase()}` },
       });
-    });
+    }, MONEY_TX);
   } catch (error) {
     if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return { ok: true, orderId: order.id, applied: false };
@@ -119,7 +119,7 @@ export async function cancelOrder(args: {
       });
     }
     return { restocked: true };
-  });
+  }, MONEY_TX);
 }
 
 export async function advanceOrder(args: {
@@ -143,7 +143,7 @@ export async function advanceOrder(args: {
       await tx.orderEvent.create({
         data: { orderId: order.id, from: order.status, to: args.to, actor: args.actor, note: args.note },
       });
-    });
+    }, MONEY_TX);
     return { ok: true };
   } catch (error) {
     if (error instanceof IllegalTransition) {

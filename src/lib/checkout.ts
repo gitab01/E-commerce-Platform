@@ -1,4 +1,4 @@
-import { prisma } from './db';
+import { prisma, MONEY_TX } from './db';
 import { addShipping } from './money';
 import { getGateway } from './payments';
 import type { CheckoutContext } from './payments/types';
@@ -120,7 +120,7 @@ export async function reserveAndCreateOrder(
 
     if (cart) await tx.cartItem.deleteMany({ where: { cartId: cart.id } });
     return { order, lines };
-  });
+  }, MONEY_TX);
 }
 
 function newReference(): string {

@@ -15,7 +15,7 @@
     "db:generate": "prisma generate",
     "db:up": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
-    "db:hardening": "prisma db execute --file prisma/manual/hardening.sql --schema prisma/schema.prisma",
+    "db:hardening": "prisma db execute --file prisma/migrations/20261005010000_hard_constraints/migration.sql --schema prisma/schema.prisma",
     "db:seed": "tsx prisma/seed.ts",
     "db:studio": "prisma studio"
   },

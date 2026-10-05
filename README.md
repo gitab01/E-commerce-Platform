@@ -13,7 +13,7 @@ a verified gateway event.
 
 | Rule | Where it is enforced |
 | --- | --- |
-| Concurrent checkout on the last unit resolves to one winner | conditional `UPDATE ... WHERE stock >= qty` inside the checkout transaction (`src/lib/checkout.ts`), plus `CHECK (stock >= 0)` in Postgres (`prisma/manual/hardening.sql`) |
+| Concurrent checkout on the last unit resolves to one winner | conditional `UPDATE ... WHERE stock >= qty` inside the checkout transaction (`src/lib/checkout.ts`), plus `CHECK (stock >= 0)` in Postgres (`prisma/migrations/20261005010000_hard_constraints/migration.sql`) |
 | Payment truth comes from webhooks, never the redirect | `src/app/api/webhooks/{stripe,chapa}/route.ts` → `markOrderPaid` (`src/lib/fulfillment.ts`); the success URL only renders a page |
 | Cart prices are re-validated server-side | `loadCartLines` reads prices from the variant rows; the request never carries a price |
 | Abandoned checkouts release stock | `reservedAt`/`expiresAt` + `reconcileStaleReservations`, run by Vercel Cron every 10 minutes (`vercel.json`) |
@@ -56,11 +56,13 @@ server-side so a stale button cannot select an unconfigured gateway.
 ```bash
 cp .env.example .env      # fill DATABASE_URL, DIRECT_DATABASE_URL, gateway keys
 npm install
-npm run db:deploy         # or db:up locally to create migrations
-npm run db:hardening      # CHECK constraints + covering index
+npm run db:deploy         # applies both committed migrations, including the CHECK constraints
 npm run db:seed           # sample catalogue + admin login
 npm run dev
 ```
+
+`npm run db:up` (`prisma migrate dev`) is for authoring new migrations, not for setup. If you ever build a database
+with `prisma db push` instead of migrations, `npm run db:hardening` re-applies the constraint migration on top.
 
 Seed admin credentials come from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`; change them before seeding a shared
 database.
@@ -109,7 +111,7 @@ history.
 
 ```
 prisma/schema.prisma            data model, enums, constraints
-prisma/manual/hardening.sql     CHECK constraints + covering index
+prisma/migrations/              baseline schema + CHECK constraints and covering index
 prisma/seed.ts                  catalogue, admin, sample shopper
 src/lib/checkout.ts             price re-validation + conditional reservation transaction
 src/lib/fulfillment.ts          markPaid / cancel / advance / reconcile
@@ -117,6 +119,6 @@ src/lib/order-state.ts          the transition table, in one place
 src/lib/payments/               one interface, stripe + chapa + demo adapters
 src/app/api/webhooks/           signature verification, idempotent application
 src/app/api/cron/reconcile/     scheduled stock release
-src/app/(pages)                 storefront, cart, checkout, order tracking, account, admin
+src/app/                        storefront, cart, checkout, order tracking, account, admin
 tests/                          concurrency, webhook replay, state machine, money, signatures
 ```

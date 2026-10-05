@@ -10,6 +10,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:unit": "vitest run tests/order-state.test.ts tests/money.test.ts tests/signature.test.ts",
+    "verify:ui": "node scripts/verify-ui.mjs",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "db:generate": "prisma generate",

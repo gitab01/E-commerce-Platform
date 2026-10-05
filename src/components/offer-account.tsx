@@ -52,7 +52,7 @@ export function OfferAccount({ email }: { email: string }) {
         <button
           type="submit"
           disabled={pending}
-          className="rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+          className="shrink-0 whitespace-nowrap rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
         >
           {pending ? 'Creating…' : 'Create account'}
         </button>

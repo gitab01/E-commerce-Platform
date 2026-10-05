@@ -77,6 +77,14 @@ npm run test        # adds the concurrency and webhook-replay suites; requires D
 The concurrency test fires 8 parallel checkouts against a variant with one unit and asserts exactly one order, stock 0,
 and no oversell.
 
+```bash
+npm run verify:ui   # drives headless Chrome: browse -> cart -> checkout -> pay -> admin transitions -> stock guard
+```
+
+It walks the real UI at 1280px and 390px, asserts the order row's status badge after each admin transition, checks that
+an over-draw is refused with the database's own message, and fails on any horizontal overflow on mobile. Screenshots are
+written to `<temp>/qoder-ecom/shots`.
+
 ## Deployment (Vercel)
 
 - Build command `vercel-build` runs `prisma generate && prisma migrate deploy && next build`; migrations never run at

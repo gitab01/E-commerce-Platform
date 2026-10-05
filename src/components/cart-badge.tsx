@@ -1,6 +1,6 @@
 'use client';
 
-import { useSyncExternalStore, useEffect } from 'react';
+import { useSyncExternalStore } from 'react';
 
 type Listener = () => void;
 
@@ -26,16 +26,15 @@ export const cartStore = {
     listeners.add(listener);
     return () => listeners.delete(listener);
   },
+  get count() {
+    return state.count;
+  },
 };
 
-export function CartBadge({ serverCount }: { serverCount: number }) {
-  // The server value is authoritative: a refresh after any write overwrites the
-  // optimistic number, so a lost request can never leave the badge lying.
-  useEffect(() => {
-    cartStore.set(serverCount);
-  }, [serverCount]);
-
-  const count = useSyncExternalStore(cartStore.subscribe, () => state.count, () => serverCount);
+export function CartBadge() {
+  // The count comes from /api/nav on mount and from each cart action after that,
+  // so the header never has to read a session cookie during render.
+  const count = useSyncExternalStore(cartStore.subscribe, () => cartStore.count, () => 0);
 
   return (
     <a

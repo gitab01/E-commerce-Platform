@@ -85,6 +85,14 @@ It walks the real UI at 1280px and 390px, asserts the order row's status badge a
 an over-draw is refused with the database's own message, and fails on any horizontal overflow on mobile. Screenshots are
 written to `<temp>/qoder-ecom/shots`.
 
+## Caching
+
+`/`, `/products` and every `/products/[slug]` are prerendered and revalidated every 60 seconds, and a stock change
+calls `revalidatePath` for that product so a sold-out variant cannot keep serving a cached "in stock". That is why the
+header takes its cart count and role from `GET /api/nav` after hydration rather than reading a cookie during render: a
+single session read in the root layout would force every catalogue page to render on demand. Cart, checkout, order
+tracking, account and admin are dynamic by design.
+
 ## Deployment (Vercel)
 
 - Build command `vercel-build` runs `prisma generate && prisma migrate deploy && next build`; migrations never run at
@@ -127,6 +135,8 @@ src/lib/order-state.ts          the transition table, in one place
 src/lib/payments/               one interface, stripe + chapa + demo adapters
 src/app/api/webhooks/           signature verification, idempotent application
 src/app/api/cron/reconcile/     scheduled stock release
+src/app/api/nav/                cart count and role, fetched after hydration
 src/app/                        storefront, cart, checkout, order tracking, account, admin
 tests/                          concurrency, webhook replay, state machine, money, signatures
+scripts/verify-ui.mjs           headless-Chrome walkthrough of both surfaces
 ```

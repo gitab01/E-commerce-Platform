@@ -258,6 +258,10 @@ async function main() {
   await typeInto('password', 'change-me-please');
   console.log('  login:', await clickUntil('Sign in', 'location.pathname.startsWith("/account") || document.body.innerText.includes("Orders")', { perTry: 20000, label: 'signed in' }));
   pass('admin sign in', 'session accepted');
+  // The header is prerendered, so who you are has to come from this endpoint.
+  const nav = await evaluate('fetch("/api/nav").then((r) => r.json()).then((n) => `signedIn=${n.signedIn} admin=${n.admin} count=${n.count}`)');
+  if (!nav.startsWith('signedIn=true admin=true')) throw new Error(`/api/nav did not report an admin session: ${nav}`);
+  pass('session nav', nav);
 
   await goto('/admin');
   await waitFor(`document.body.innerText.includes(${JSON.stringify(reference.slice(0, 4))})`, { label: 'order in admin' });

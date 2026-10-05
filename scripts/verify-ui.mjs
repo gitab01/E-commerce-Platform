@@ -207,6 +207,20 @@ async function main() {
   await shot('02-product-desktop');
 
   // 3. Add to cart writes the server-side cart
+  // A stored cart from a previous run would make "Added" ambiguous and could push
+  // the line above the remaining stock, so start from an empty cart.
+  await goto('/cart', { wait: 900 });
+  const hasLines = await evaluate('document.body.innerText.includes("Empty cart")');
+  console.log(
+    '  clear:',
+    hasLines
+      ? await clickUntil('Empty cart', 'document.body.innerText.includes("Your cart is empty")', {
+          tries: 4,
+          label: 'cart emptied',
+        })
+      : 'already empty',
+  );
+  await goto('/products/wireless-headphones');
   console.log('  add:', await clickUntil('Add to cart', 'document.body.innerText.includes("Added")', { label: 'cart write' }));
 
   // 4. Cart
@@ -312,13 +326,24 @@ async function main() {
   const refusal = (await text()).match(/[^\n]*below zero[^\n]*/i)?.[0] ?? 'no message';
   pass('stock guard', refusal);
 
-  // 9. Mobile pass over the same surfaces
+  // 9. Uploaded artwork comes from object storage through one guarded key shape
+  await goto('/admin/assets');
+  await waitFor('document.querySelector("[name=image]")', { label: 'image upload form' });
+  const forms = await evaluate('document.querySelectorAll("[name=image]").length');
+  await shot('19-admin-assets-desktop');
+  pass('admin images page', `${forms} upload forms render`);
+
+  const traversal = await evaluate('fetch("/api/assets/products/..%2F..%2Fpackage.json").then((r) => r.status)');
+  if (traversal === 404) pass('asset key guard', 'traversal-shaped key refused with 404');
+  else fail('asset key guard', `got HTTP ${traversal}`);
+
+  // 10. Mobile pass over the same surfaces
   await setViewport(390, 844, true);
   // The desktop order emptied the cart, and /checkout redirects when it is empty,
   // so re-seed it or the mobile checkout shot proves nothing.
   await goto('/products/wireless-headphones', { wait: 900 });
   console.log('  mobile add:', await clickUntil('Add to cart', 'document.body.innerText.includes("Added")', { label: 'mobile cart write' }));
-  const mobile = [['/', '12-home-mobile'], ['/products/wireless-headphones', '13-product-mobile'], ['/cart', '14-cart-mobile'], ['/checkout', '15-checkout-mobile'], [`/order/${reference}`, '16-order-mobile'], ['/admin', '17-admin-mobile'], ['/admin/orders', '18-admin-orders-mobile']];
+  const mobile = [['/', '12-home-mobile'], ['/products/wireless-headphones', '13-product-mobile'], ['/cart', '14-cart-mobile'], ['/checkout', '15-checkout-mobile'], [`/order/${reference}`, '16-order-mobile'], ['/admin', '17-admin-mobile'], ['/admin/orders', '18-admin-orders-mobile'], ['/admin/assets', '20-admin-assets-mobile']];
   for (const [path, name] of mobile) {
     await goto(path, { wait: 900 });
     const over = await overflow();

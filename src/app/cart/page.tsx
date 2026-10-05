@@ -2,8 +2,8 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { peekCartSessionId } from '@/lib/cart-session';
 import { totalsFor, type CartLine } from '@/lib/checkout';
-import { formatMoney } from '@/lib/money';
 import { CartLines, type CartRow } from '@/components/cart-lines';
+import { ClearCartButton } from '@/components/clear-cart-button';
 import { CheckoutPanel } from '@/components/checkout-panel';
 
 export const dynamic = 'force-dynamic';
@@ -61,9 +61,12 @@ export default async function CartPage() {
       <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
         <div>
           <CartLines rows={rows} />
-          <Link href="/products" className="mt-4 inline-block text-sm text-neutral-600 underline-offset-4 hover:underline">
-            Continue shopping
-          </Link>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
+            <Link href="/products" className="text-sm text-neutral-600 underline-offset-4 hover:underline">
+              Continue shopping
+            </Link>
+            <ClearCartButton />
+          </div>
         </div>
         <CheckoutPanel
           totals={{ subtotalCents: totals.subtotalCents, shippingCents: totals.shippingCents, totalCents: totals.totalCents }}

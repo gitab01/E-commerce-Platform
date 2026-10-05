@@ -70,7 +70,7 @@ database.
 ### Tests
 
 ```bash
-npm run test:unit   # state machine, money, currency boundary, webhook signatures — no database needed
+npm run test:unit   # state machine, money, currency boundary, webhook signatures, asset keys — no database needed
 npm run test        # adds the concurrency and webhook-replay suites; requires DATABASE_URL
 ```
 
@@ -99,7 +99,8 @@ tracking, account and admin are dynamic by design.
   application startup.
 - `vercel.json` schedules `/api/cron/reconcile` every 10 minutes; the route requires `Authorization: Bearer $CRON_SECRET`.
 - Env: `DATABASE_URL` (Neon pooled), `DIRECT_DATABASE_URL` (Neon direct, for migrations), `APP_URL`, gateway keys,
-  `CRON_SECRET`.
+  `CRON_SECRET`. Optional: `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
+  `S3_BUCKET` — without them admin image uploads report that storage is not configured.
 - Point the gateway webhooks at `https://<host>/api/webhooks/chapa` and `/api/webhooks/stripe`.
 
 ## Admin
@@ -109,9 +110,18 @@ manual reconciliation run. `/admin/orders` — filter by state or search referen
 `/admin/orders/[id]` — line items with prices frozen at purchase time, payment detail, full audit trail.
 `/admin/inventory` — stock adjustments; a negative that would cross zero is rejected by the database constraint, and
 every adjustment is written to `audit_log`.
+`/admin/assets` — replace a product's image with an upload; the bytes go to object storage and the swap is audited.
 
 Access is gated twice: the admin layout checks the session, and every admin mutation re-reads the role from the
 database — so revoking a role takes effect on the next request.
+
+## Object storage
+
+Uploaded product images are written to Neon's S3-compatible bucket (`src/lib/assets.ts`) and read back through
+`/api/assets/<key>`, so the bucket can stay private. Keys are `products/<slug>-<content hash>.<ext>`: identical bytes
+resolve to the same URL, which is why the route can answer `immutable`. The route accepts only that one flat shape and
+derives the content type from the extension it handed out, so an uploaded file can never be served as anything but an
+image. Without the `AWS_*`/`S3_BUCKET` variables the seeded local artwork keeps working.
 
 ## Data model
 
@@ -133,10 +143,12 @@ src/lib/checkout.ts             price re-validation + conditional reservation tr
 src/lib/fulfillment.ts          markPaid / cancel / advance / reconcile
 src/lib/order-state.ts          the transition table, in one place
 src/lib/payments/               one interface, stripe + chapa + demo adapters
+src/lib/assets.ts               Neon S3 upload/read, key shape and content typing
 src/app/api/webhooks/           signature verification, idempotent application
 src/app/api/cron/reconcile/     scheduled stock release
 src/app/api/nav/                cart count and role, fetched after hydration
+src/app/api/assets/             serves uploaded artwork from the private bucket
 src/app/                        storefront, cart, checkout, order tracking, account, admin
-tests/                          concurrency, webhook replay, state machine, money, signatures
+tests/                          concurrency, webhook replay, state machine, money, signatures, asset keys
 scripts/verify-ui.mjs           headless-Chrome walkthrough of both surfaces
 ```

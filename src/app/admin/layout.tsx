@@ -34,6 +34,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin/inventory" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
           Inventory
         </Link>
+        <Link href="/admin/assets" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
+          Images
+        </Link>
         <span className="ml-auto text-xs text-neutral-500">{user.email}</span>
       </nav>
       <div className="mt-8">{children}</div>

@@ -213,3 +213,38 @@ export async function reconcileStaleReservations(now = new Date()): Promise<Reco
   }
   return report;
 }
+
+/**
+ * Re-issues a gateway session for an order that already holds its reservation,
+ * so a failed session creation is retryable instead of stranding inventory.
+ * Stock is never touched here — the reservation was made when the order was created.
+ */
+export async function resumePendingOrder(
+  reference: string,
+): Promise<{ ok: true; redirectTo: string } | { ok: false; reason: string }> {
+  const order = await prisma.order.findUnique({
+    where: { reference },
+    include: { items: true },
+  });
+  if (!order) return { ok: false, reason: 'UNKNOWN_ORDER' };
+  if (order.status !== 'PENDING') return { ok: false, reason: 'NOT_AWAITING_PAYMENT' };
+  if (order.expiresAt < new Date()) return { ok: false, reason: 'RESERVATION_EXPIRED' };
+
+  const gateway = getGateway(order.provider);
+  if (!gateway.isConfigured()) return { ok: false, reason: 'PROVIDER_UNAVAILABLE' };
+
+  const created = await gateway.createCheckout({
+    order,
+    lines: order.items.map((item) => ({
+      sku: item.sku,
+      title: item.title,
+      quantity: item.quantity,
+      unitPriceCents: item.unitPriceCents,
+    })),
+  });
+  await prisma.order.update({
+    where: { id: order.id },
+    data: { providerSessionId: created.providerSessionId },
+  });
+  return { ok: true, redirectTo: created.redirectTo };
+}

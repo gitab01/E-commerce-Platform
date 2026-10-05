@@ -1,36 +1,122 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# E-commerce Platform
 
-## Getting Started
+Storefront + admin system where inventory, cart and payment state cannot disagree — even when two people buy the
+last unit at the same time.
 
-First, run the development server:
+Next.js 16 (App Router, server actions) · TypeScript · PostgreSQL (Neon) · Prisma 6 · Stripe Checkout · **Chapa**
+(telebirr / CBE Birr / Ethiopian cards) · Tailwind CSS v4.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## The invariant this codebase is built around
+
+Nothing may produce an inconsistent state: no negative stock, no paid-but-missing order, no order marked paid without
+a verified gateway event.
+
+| Rule | Where it is enforced |
+| --- | --- |
+| Concurrent checkout on the last unit resolves to one winner | conditional `UPDATE ... WHERE stock >= qty` inside the checkout transaction (`src/lib/checkout.ts`), plus `CHECK (stock >= 0)` in Postgres (`prisma/manual/hardening.sql`) |
+| Payment truth comes from webhooks, never the redirect | `src/app/api/webhooks/{stripe,chapa}/route.ts` → `markOrderPaid` (`src/lib/fulfillment.ts`); the success URL only renders a page |
+| Cart prices are re-validated server-side | `loadCartLines` reads prices from the variant rows; the request never carries a price |
+| Abandoned checkouts release stock | `reservedAt`/`expiresAt` + `reconcileStaleReservations`, run by Vercel Cron every 10 minutes (`vercel.json`) |
+| A retried webhook cannot double-apply | `(provider, externalId)` unique row written in the same transaction as the status change |
+| Illegal transitions are visible, not silent | `assertTransition` in `src/lib/order-state.ts`; rejections are recorded in `order_events` |
+
+Money is integer minor units of one base currency (`BASE_CURRENCY`, default ETB santim). A gateway that presents
+another currency converts once at its own boundary (`src/lib/currency.ts`) and refuses to guess a rate.
+
+## Flow
+
+```
+cart (server-side, keyed to an httpOnly session cookie)
+  └─ checkout: BEGIN → re-read prices → conditional stock decrement → INSERT order(PENDING) + immutable line items → COMMIT
+       └─ gateway session created AFTER the commit, so a webhook always resolves to a row
+            └─ signed webhook → PaymentEvent + status PAID
+                 └─ admin ships → customer sees the timeline
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Order states: `PENDING → PAID → SHIPPED → DELIVERED`, with `PENDING/PAID → CANCELLED` and `PENDING → EXPIRED`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Payment providers
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Both are behind one interface (`src/lib/payments/types.ts`); the provider chosen at checkout is stored on the order,
+and each has its own webhook route.
 
-## Learn More
+- **Chapa** — `POST {CHAPA_BASE_URL}/transaction/initialize`, `tx_ref` = our order reference, `callback_url` = our
+  webhook. Confirmation is `verified.transaction`, verified as HMAC-SHA256 (base64, `X-Chapa-Signature`) over the raw
+  body. The reconciliation job also calls the verify endpoint, so a lost webhook cannot expire a paid order.
+- **Stripe** — Checkout Session with `client_reference_id` = order reference (lets an early webhook resolve the order
+  before the session id is stored). Signature-verified, idempotent on event id.
+- **Demo** — `DEMO_PAYMENTS=true` adds a provider that completes orders with no charge for screenshots and CI. It still
+  routes confirmation through the fulfilment service, never through the browser.
 
-To learn more about Next.js, take a look at the following resources:
+Offered providers come from `PAYMENT_PROVIDERS` intersected with the credentials actually present; checkout re-checks
+server-side so a stale button cannot select an unconfigured gateway.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Setup
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+cp .env.example .env      # fill DATABASE_URL, DIRECT_DATABASE_URL, gateway keys
+npm install
+npm run db:deploy         # or db:up locally to create migrations
+npm run db:hardening      # CHECK constraints + covering index
+npm run db:seed           # sample catalogue + admin login
+npm run dev
+```
 
-## Deploy on Vercel
+Seed admin credentials come from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`; change them before seeding a shared
+database.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Tests
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm run test:unit   # state machine, money, currency boundary, webhook signatures — no database needed
+npm run test        # adds the concurrency and webhook-replay suites; requires DATABASE_URL
+```
+
+The concurrency test fires 8 parallel checkouts against a variant with one unit and asserts exactly one order, stock 0,
+and no oversell.
+
+## Deployment (Vercel)
+
+- Build command `vercel-build` runs `prisma generate && prisma migrate deploy && next build`; migrations never run at
+  application startup.
+- `vercel.json` schedules `/api/cron/reconcile` every 10 minutes; the route requires `Authorization: Bearer $CRON_SECRET`.
+- Env: `DATABASE_URL` (Neon pooled), `DIRECT_DATABASE_URL` (Neon direct, for migrations), `APP_URL`, gateway keys,
+  `CRON_SECRET`.
+- Point the gateway webhooks at `https://<host>/api/webhooks/chapa` and `/api/webhooks/stripe`.
+
+## Admin
+
+`/admin` — revenue that only counts gateway-confirmed orders, counts per state, held reservations, low-stock list,
+manual reconciliation run. `/admin/orders` — filter by state or search reference/email, inline legal transitions only.
+`/admin/orders/[id]` — line items with prices frozen at purchase time, payment detail, full audit trail.
+`/admin/inventory` — stock adjustments; a negative that would cross zero is rejected by the database constraint, and
+every adjustment is written to `audit_log`.
+
+Access is gated twice: the admin layout checks the session, and every admin mutation re-reads the role from the
+database — so revoking a role takes effect on the next request.
+
+## Data model
+
+`categories` → `products` → `variants` (sku, priceCents, stock, `CHECK stock >= 0`) · `carts`/`cart_items` keyed by
+session · `orders` (state machine, reservation timestamps, unique `providerSessionId`) → `order_items` (immutable price
+copy) · `order_events` (audit trail incl. rejected transitions) · `payment_events` (webhook idempotency) ·
+`users`/`sessions` (only a SHA-256 hash of the session token is stored) · `audit_log`.
+
+Indexes: `(status, reservedAt)` and `(status, expiresAt)` for the reconciliation scan, `(userId, createdAt)` for order
+history.
+
+## Layout
+
+```
+prisma/schema.prisma            data model, enums, constraints
+prisma/manual/hardening.sql     CHECK constraints + covering index
+prisma/seed.ts                  catalogue, admin, sample shopper
+src/lib/checkout.ts             price re-validation + conditional reservation transaction
+src/lib/fulfillment.ts          markPaid / cancel / advance / reconcile
+src/lib/order-state.ts          the transition table, in one place
+src/lib/payments/               one interface, stripe + chapa + demo adapters
+src/app/api/webhooks/           signature verification, idempotent application
+src/app/api/cron/reconcile/     scheduled stock release
+src/app/(pages)                 storefront, cart, checkout, order tracking, account, admin
+tests/                          concurrency, webhook replay, state machine, money, signatures
+```

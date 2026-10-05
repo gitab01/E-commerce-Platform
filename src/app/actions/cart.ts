@@ -99,3 +99,33 @@ export function revalidateProductSlug(slug: string) {
   revalidatePath(`/products/${slug}`);
   revalidatePath('/products');
 }
+
+export async function reorderFromOrder(rawReference: unknown): Promise<{ added: number; skipped: number }> {
+  const reference = z.string().min(4).max(12).safeParse(String(rawReference ?? ''));
+  if (!reference.success) return { added: 0, skipped: 0 };
+
+  const order = await prisma.order.findUnique({
+    where: { reference: reference.data },
+    include: { items: true },
+  });
+  if (!order) return { added: 0, skipped: 0 };
+
+  let added = 0;
+  let skipped = 0;
+  for (const item of order.items) {
+    const variant = await prisma.variant.findUnique({
+      where: { sku: item.sku },
+      select: { id: true, stock: true },
+    });
+    const want = Math.min(item.quantity, variant?.stock ?? 0);
+    if (!variant || want === 0) {
+      skipped += 1;
+      continue;
+    }
+    const result = await addToCart(variant.id, want);
+    if (result.ok) added += 1;
+    else skipped += 1;
+  }
+  revalidatePath('/cart');
+  return { added, skipped };
+}

@@ -136,6 +136,8 @@ model Order {
   providerReference String?
   currency          String           @default("USD")
   reservedAt        DateTime         @default(now())
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
   expiresAt         DateTime
   paidAt            DateTime?
   shippedAt         DateTime?
@@ -198,4 +200,17 @@ model PaymentEvent {
   @@unique([provider, externalId])
   @@index([orderId])
   @@map("payment_events")
+}
+
+/// Who changed what: inventory edits and any other privileged operation.
+model AuditLog {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  target    String
+  detail    String
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@map("audit_log")
 }

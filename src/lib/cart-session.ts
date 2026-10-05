@@ -7,6 +7,9 @@ const CART_TTL_SECONDS = 60 * 60 * 24 * 30;
 /**
  * The cart is keyed to an opaque server-issued session id held in an httpOnly
  * cookie. The client never chooses which cart it is writing to.
+ *
+ * Only callable from a server action or route handler: it mints and stores a
+ * cookie, which Next.js forbids during a render.
  */
 export async function cartSessionId(): Promise<string> {
   const store = await cookies();
@@ -21,6 +24,12 @@ export async function cartSessionId(): Promise<string> {
     maxAge: CART_TTL_SECONDS,
   });
   return id;
+}
+
+/** Read-only form for renders: a visitor with no cart yet simply has none. */
+export async function peekCartSessionId(): Promise<string | null> {
+  const store = await cookies();
+  return store.get(CART_COOKIE)?.value ?? null;
 }
 
 export async function clearCartSession(): Promise<void> {

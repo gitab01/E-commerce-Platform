@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { prisma } from '@/lib/db';
-import { cartSessionId } from '@/lib/cart-session';
+import { peekCartSessionId } from '@/lib/cart-session';
 import { totalsFor, type CartLine } from '@/lib/checkout';
 import { formatMoney } from '@/lib/money';
 import { CartLines, type CartRow } from '@/components/cart-lines';
@@ -9,7 +9,8 @@ import { CheckoutPanel } from '@/components/checkout-panel';
 export const dynamic = 'force-dynamic';
 
 async function loadCart(): Promise<{ rows: CartRow[]; lines: CartLine[] }> {
-  const sessionId = await cartSessionId();
+  const sessionId = await peekCartSessionId();
+  if (!sessionId) return { rows: [], lines: [] };
   const cart = await prisma.cart.findUnique({
     where: { sessionId },
     include: {

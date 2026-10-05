@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { prisma } from '@/lib/db';
-import { cartSessionId } from '@/lib/cart-session';
+import { peekCartSessionId } from '@/lib/cart-session';
 import { totalsFor, type CartLine } from '@/lib/checkout';
 import { currentUser } from '@/lib/auth';
 import { availableProviders } from '@/lib/payments';
@@ -18,7 +18,8 @@ const PROVIDER_COPY: Record<PaymentProvider, { label: string; hint: string }> = 
 };
 
 async function loadLines(): Promise<CartLine[]> {
-  const sessionId = await cartSessionId();
+  const sessionId = await peekCartSessionId();
+  if (!sessionId) return [];
   const cart = await prisma.cart.findUnique({
     where: { sessionId },
     include: {

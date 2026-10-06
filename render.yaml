@@ -9,6 +9,12 @@
 # Every variable marked `sync: false` is left blank on purpose. Fill them in the
 # Render dashboard after the first build fails for a missing variable; never
 # commit a real value to this file.
+#
+# Two things that cost time: this file is only read when the repository is added
+# through New -> Blueprint. A service created with New -> Web Service ignores it
+# completely and every command, health check and variable has to be typed in.
+# And the dashboard Name field decides the hostname, so read the real URL from
+# the service's Overview page instead of guessing it from the name below.
 services:
   - type: web
     name: shega-mart

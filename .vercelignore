@@ -1,0 +1,7 @@
+# `vercel --prod` uploads the working directory, and .gitignore is not consulted for
+# a local deploy. Without this the deployment carries the local .env, and production
+# silently runs on dev secrets — including DEMO_PAYMENTS.
+.env
+.env.local
+.next
+node_modules

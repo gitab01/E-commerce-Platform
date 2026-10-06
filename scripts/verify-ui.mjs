@@ -131,7 +131,8 @@ async function typeInto(name, value) {
     const el = document.querySelector('[name=${JSON.stringify(name)}]');
     if (!el) return 'NO FIELD ' + ${JSON.stringify(name)};
     const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
-    Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(value)});
+    try { Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(value)}); }
+    catch { el.value = ${JSON.stringify(value)}; }
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
     return 'typed ' + ${JSON.stringify(name)};

@@ -12,6 +12,7 @@
     "test:unit": "vitest run tests/order-state.test.ts tests/money.test.ts tests/signature.test.ts tests/assets.test.ts tests/catalog-admin.test.ts",
     "verify:ui": "node scripts/verify-ui.mjs",
     "check:db": "node scripts/check-db.mjs",
+    "admin:password": "node scripts/set-admin-password.mjs",
     "postinstall": "prisma generate",
     "vercel-build": "prisma generate && prisma migrate deploy && next build",
     "db:generate": "prisma generate",

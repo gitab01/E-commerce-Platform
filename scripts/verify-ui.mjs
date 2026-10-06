@@ -7,6 +7,10 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import { config } from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+
+config({ path: '.env' });
 
 const CHROME =
   process.env.CHROME_PATH ??
@@ -108,34 +112,49 @@ async function clickText(text) {
   })()`);
 }
 
+async function formDump() {
+  return evaluate(`[...document.querySelectorAll('form [name]')].map((el) => {
+    let problem = '';
+    try { if (!el.checkValidity()) problem = ' INVALID: ' + el.validationMessage; } catch {}
+    return el.name + '(' + el.tagName + ':' + (el.type || '') + ')=' + JSON.stringify(String(el.value ?? '')).slice(0, 24) + problem;
+  }).join(' | ')`);
+}
+
+async function buttonsDump() {
+  return evaluate(`[...document.querySelectorAll('button')].map((b) => b.textContent.trim() + (b.disabled ? '[disabled]' : '')).join(' | ').slice(0, 300)`);
+}
+
 async function clickUntil(text, expectExpr, { tries = 8, perTry = 6000, label = text } = {}) {
   const log = [];
   for (let i = 0; i < tries; i += 1) {
     log.push(String(await clickText(text)));
-    if (log[log.length - 1].startsWith('NOT FOUND')) {
-      await sleep(1500);
-      continue;
-    }
+    // Test the expectation even when the control is gone: a click that navigated
+    // removes the button it pressed, and that is a pass, not a miss.
     try {
       await waitFor(expectExpr, { timeout: perTry, label });
       return log[log.length - 1];
     } catch {
       // Either the action is still in flight or the click landed pre-hydration; retry.
     }
+    if (log[log.length - 1].startsWith('NOT FOUND')) await sleep(1500);
   }
-  throw new Error(`${label} never happened after ${tries} clicks (${log.join('; ')})`);
+  let dump = '';
+  try {
+    dump = ` :: fields: ${await formDump()} :: buttons: ${await buttonsDump()}`;
+  } catch {}
+  throw new Error(`${label} never happened after ${tries} clicks (${log.join('; ')})${dump}`);
 }
 
 async function typeInto(name, value) {
   return evaluate(`(() => {
-    const el = document.querySelector('[name=${JSON.stringify(name)}]');
+    const el = document.querySelector('form [name=${JSON.stringify(name)}]') ?? document.querySelector('[name=${JSON.stringify(name)}]');
     if (!el) return 'NO FIELD ' + ${JSON.stringify(name)};
     const proto = el instanceof HTMLTextAreaElement ? HTMLTextAreaElement.prototype : HTMLInputElement.prototype;
     try { Object.getOwnPropertyDescriptor(proto, 'value').set.call(el, ${JSON.stringify(value)}); }
     catch { el.value = ${JSON.stringify(value)}; }
     el.dispatchEvent(new Event('input', { bubbles: true }));
     el.dispatchEvent(new Event('change', { bubbles: true }));
-    return 'typed ' + ${JSON.stringify(name)};
+    return el.name + '=' + (el.value === ${JSON.stringify(value)} ? 'ok' : 'MISMATCH');
   })()`);
 }
 
@@ -156,7 +175,38 @@ async function text() {
 
 const PRODUCT_LINKS = `document.querySelectorAll('a[href^="/products/"]').length`;
 
+/**
+ * This run creates a product and an admin in the same Neon database production
+ * reads, so leftovers from an earlier crash are cleared before the browser starts.
+ */
+async function sweepTestRows() {
+  const db = new PrismaClient();
+  try {
+    const products = await db.product.findMany({
+      where: { slug: { startsWith: 'walkthrough-' } },
+      select: { id: true },
+    });
+    for (const product of products) {
+      await db.variant.deleteMany({ where: { productId: product.id } }).catch(() => undefined);
+      await db.product.delete({ where: { id: product.id } }).catch(() => undefined);
+    }
+    const users = await db.user.deleteMany({ where: { email: { startsWith: 'walkthrough-admin-' } } });
+    const still = await db.product.count({ where: { slug: { startsWith: 'walkthrough-' } } });
+    return `${products.length} test product(s) cleared, ${users.count} test admin(s) cleared${
+      still ? `, ${still} refused to go (order history)` : ''
+    }`;
+  } finally {
+    await db.$disconnect();
+  }
+}
+
 async function main() {
+  try {
+    pass('sweep', await sweepTestRows());
+  } catch (error) {
+    fail('sweep', error.message);
+  }
+
   chrome = spawn(CHROME, [
     '--headless=new',
     `--remote-debugging-port=${PORT}`,
@@ -360,15 +410,29 @@ async function main() {
 
   await goto('/admin/products/new');
   await waitFor(`document.querySelector('[name="title"]')`, { label: 'new product form' });
-  await typeInto('title', 'Walkthrough Test Product');
-  await typeInto('handle', handle);
-  await typeInto('category', 'Accessories');
-  await typeInto('image', '/products/dock.svg');
-  await typeInto('description', 'Written by the browser walkthrough to exercise the admin product write path.');
-  console.log('  create:', await clickUntil('Create product', `location.pathname.startsWith('/admin/products/')`, {
-    perTry: 20000,
-    label: 'redirect to the new product',
-  }));
+  const fieldsWritten = [];
+  for (const [field, value] of [
+    ['title', 'Walkthrough Test Product'],
+    ['handle', handle],
+    ['category', 'Accessories'],
+    ['image', '/products/dock.svg'],
+    ['description', 'Written by the browser walkthrough to exercise the admin product write path.'],
+  ]) {
+    fieldsWritten.push(await typeInto(field, value));
+  }
+  console.log('  typed:', fieldsWritten.join(' | '));
+  console.log('  fields:', await formDump());
+  console.log(
+    '  create:',
+    await clickUntil(
+      'Create product',
+      `location.pathname.startsWith('/admin/products/') && location.pathname !== '/admin/products/new'`,
+      {
+        perTry: 20000,
+        label: 'redirect to the new product',
+      },
+    ),
+  );
   const createdPath = String(await evaluate('location.pathname'));
   if (!/^\/admin\/products\/[a-z0-9]+$/.test(createdPath)) throw new Error(`create landed on ${createdPath}`);
   pass('admin create product', createdPath.split('/').pop());
@@ -466,11 +530,78 @@ async function main() {
     pass('self-role guard', 'an admin cannot demote themselves');
   }
 
+  // 11. A second admin, created from the dashboard and then proven at /login.
+  const staffEmail = `walkthrough-admin-${stamp}@example.com`;
+  const staffPassword = `walkthrough-${stamp}-secret`;
+  await goto('/admin/customers');
+  await waitFor(`document.querySelector('[name="password"]')`, { label: 'add-admin form' });
+  await typeInto('name', 'Walkthrough Manager');
+  await typeInto('email', staffEmail);
+  await typeInto('password', staffPassword);
+  await clickUntil('Add admin', `document.body.innerText.includes('Admin added.')`, {
+    tries: 5,
+    label: 'admin created from the dashboard',
+  });
+  pass('dashboard creates an admin', staffEmail);
+
+  await goto('/account');
+  await clickUntil('Sign out', `location.pathname !== '/account'`, { tries: 5, label: 'signed out' });
+  await goto('/login');
+  await waitFor(`document.querySelector('[name="email"]')`, { label: 'login form' });
+  await typeInto('email', staffEmail);
+  await typeInto('password', staffPassword);
+  await clickUntil(
+    'Sign in',
+    `location.pathname.startsWith('/account') || document.body.innerText.includes('Orders')`,
+    { tries: 5, label: 'the new password opens the store' },
+  );
+  const staffNav = await evaluate(
+    'fetch("/api/nav").then((r) => r.json()).then((n) => `signedIn=${n.signedIn} admin=${n.admin}`)',
+  );
+  if (!staffNav.startsWith('signedIn=true admin=true')) {
+    throw new Error(`the account created by an admin is not an admin session: ${staffNav}`);
+  }
+  pass('new admin signs in', staffNav);
+
+  // The seed admin must do the deleting: an account cannot remove itself.
+  await goto('/account');
+  await clickUntil('Sign out', `location.pathname !== '/account'`, { tries: 5, label: 'signed out the test admin' });
+  await goto('/login');
+  await waitFor(`document.querySelector('[name="email"]')`, { label: 'login form' });
+  await typeInto('email', 'admin@example.com');
+  await typeInto('password', 'change-me-please');
+  await clickUntil(
+    'Sign in',
+    `location.pathname.startsWith('/account') || document.body.innerText.includes('Orders')`,
+    { tries: 5, label: 'the seed admin is back' },
+  );
+
+  // Shared database, so remove the evidence before carrying on.
+  await goto(`/admin/customers?q=${encodeURIComponent(staffEmail)}`);
+  const staffPath = await linkTo('Walkthrough Manager');
+  if (staffPath === 'NOT FOUND') fail('staff cleanup', `${staffEmail} could not be found to delete`);
+  else {
+    await goto(staffPath);
+    await waitFor(`document.body.innerText.includes('Delete account')`, { label: 'delete control' });
+    await clickUntil('Delete account', `document.body.innerText.includes('Confirm: Delete account')`, {
+      tries: 5,
+      label: 'delete armed',
+    });
+    await clickUntil('Confirm: Delete account', `location.pathname === '/admin/customers'`, {
+      tries: 5,
+      // The delete is a Neon write followed by a client-side redirect; on this
+      // machine that pairing overruns the default per-try window.
+      perTry: 20000,
+      label: 'test admin deleted',
+    });
+    pass('staff cleanup', `${staffEmail} removed again`);
+  }
+
   await goto('/admin/inventory');
   if (await evaluate(`document.body.innerText.includes('product.create')`)) pass('audit trail', 'catalogue writes recorded');
   else fail('audit trail', 'no product.create entry in the recent operations list');
 
-  // 11. Mobile pass over the same surfaces
+  // 12. Mobile pass over the same surfaces
   await setViewport(390, 844, true);
   // The desktop order emptied the cart, and /checkout redirects when it is empty,
   // so re-seed it or the mobile checkout shot proves nothing.
@@ -512,7 +643,11 @@ main().catch(async (error) => {
   console.error('VERIFY FAILED:', error.message);
   try {
     console.log('  at:', await evaluate('location.href'));
-    console.log('  page:', String(await evaluate('document.body.innerText')).replace(/\s+/g, ' ').slice(0, 300));
+    console.log(
+      '  status:',
+      await evaluate(`(document.querySelector('[role=status]')||{}).innerText ?? 'none'`),
+    );
+    console.log('  page:', String(await evaluate('document.body.innerText')).replace(/\s+/g, ' ').slice(0, 2000));
     await shot('99-failure');
   } catch {}
   console.log(JSON.stringify(report, null, 1));

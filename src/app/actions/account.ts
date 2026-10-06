@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { prisma } from '@/lib/db';
-import { hashPassword, verifyPassword, startSession, destroySession, currentUser } from '@/lib/auth';
+import { hashPassword, verifyPassword, startSession, destroySession, guardAdmin } from '@/lib/auth';
 import { advanceOrder, reconcileStaleReservations } from '@/lib/fulfillment';
 import { revalidateProductSlug } from '@/lib/catalog';
 import type { OrderStatus } from '@prisma/client';
@@ -122,13 +122,4 @@ export async function runReconciliationNow(): Promise<{ ok: true; summary: strin
       report.errors.length ? `, errors ${report.errors.length}` : ''
     }`,
   };
-}
-
-async function guardAdmin() {
-  const user = await currentUser();
-  if (!user) return null;
-  // Second gate: read the role from the database, not the cached user object.
-  const fresh = await prisma.user.findUnique({ where: { id: user.id }, select: { role: true, email: true } });
-  if (fresh?.role !== 'ADMIN') return null;
-  return fresh;
 }

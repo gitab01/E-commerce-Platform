@@ -197,6 +197,16 @@ async function main() {
   // 1. Storefront
   await goto('/');
   await waitFor(`${PRODUCT_LINKS} > 0`, { label: 'product cards' });
+  const brand = await evaluate(`(() => {
+    const body = document.querySelector('.brand-mark .brand-body');
+    return {
+      named: document.body.innerText.includes('Shega Mart'),
+      animation: body ? getComputedStyle(body).animationName : 'none',
+    };
+  })()`);
+  if (!brand.named) fail('brand', 'Shega Mart wordmark missing from the header');
+  else if (brand.animation !== 'brand-draw') fail('brand', `logo animation is "${brand.animation}"`);
+  else pass('brand', 'Shega Mart wordmark with the self-drawing logo mark');
   pass('home', `${await evaluate(PRODUCT_LINKS)} product links, overflow ${await overflow()}px`);
   await shot('01-home-desktop');
 
@@ -337,13 +347,146 @@ async function main() {
   if (traversal === 404) pass('asset key guard', 'traversal-shaped key refused with 404');
   else fail('asset key guard', `got HTTP ${traversal}`);
 
-  // 10. Mobile pass over the same surfaces
+  // 10. Admin catalogue and customer management, guards included
+  const stamp = Date.now().toString(36).slice(-5);
+  const handle = `walkthrough-${stamp}`;
+  const sku = `WALK-${stamp}`;
+
+  await goto('/admin/products');
+  await waitFor(`document.querySelector('a[href="/admin/products/new"]')`, { label: 'products list' });
+  pass('admin products list', `${await evaluate(`document.querySelectorAll('a[href^="/admin/products/"]').length`)} product links`);
+  await shot('21-admin-products-desktop');
+
+  await goto('/admin/products/new');
+  await waitFor(`document.querySelector('[name="title"]')`, { label: 'new product form' });
+  await typeInto('title', 'Walkthrough Test Product');
+  await typeInto('handle', handle);
+  await typeInto('category', 'Accessories');
+  await typeInto('image', '/products/dock.svg');
+  await typeInto('description', 'Written by the browser walkthrough to exercise the admin product write path.');
+  console.log('  create:', await clickUntil('Create product', `location.pathname.startsWith('/admin/products/')`, {
+    perTry: 20000,
+    label: 'redirect to the new product',
+  }));
+  const createdPath = String(await evaluate('location.pathname'));
+  if (!/^\/admin\/products\/[a-z0-9]+$/.test(createdPath)) throw new Error(`create landed on ${createdPath}`);
+  pass('admin create product', createdPath.split('/').pop());
+
+  await waitFor(`document.querySelectorAll('[name="sku"]').length > 0`, { label: 'add-variant form' });
+  await typeInto('sku', sku);
+  await typeInto('name', 'Walkthrough option');
+  await typeInto('price', '123.45');
+  await typeInto('stock', '3');
+  await evaluate(`document.querySelector('[name="sku"]').closest('form').requestSubmit()`);
+  await waitFor(`document.querySelectorAll('[name="sku"]').length === 2`, { label: 'variant row added' });
+  pass('admin add variant', `${sku} at Br123.45 with 3 in stock`);
+
+  await goto(`/products/${handle}`);
+  await waitFor(`document.body.innerText.includes('Br123.45')`, { label: 'storefront price' });
+  pass('admin write reaches the storefront', 'the new product is purchasable without a redeploy');
+  await shot('22-product-created-by-admin-desktop');
+
+  await goto(createdPath);
+  await waitFor(`document.querySelector('[name="title"]')`, { label: 'edit form' });
+  await clickUntil('Save changes', `document.body.innerText.includes('Saved.')`, { tries: 4, label: 'product update' });
+  pass('admin edit product', 're-saving the same handle is accepted, not reported as taken');
+
+  // A product that appears in order history must refuse deletion, not orphan it.
+  await goto('/admin/products');
+  const soldPath = await evaluate(`(() => {
+    const link = [...document.querySelectorAll('a[href^="/admin/products/"]')]
+      .find((a) => (a.innerText || '').includes('Wireless Headphones'));
+    return link ? link.getAttribute('href') : 'NOT FOUND';
+  })()`);
+  if (soldPath === 'NOT FOUND') fail('delete guard', 'could not find a product with sales history');
+  else {
+    await goto(soldPath);
+    await waitFor(`document.body.innerText.includes('Delete this product')`, { label: 'edit page' });
+    await clickUntil('Delete product', `document.body.innerText.includes('cannot be deleted')`, {
+      tries: 5,
+      label: 'refusal shown',
+    });
+    pass('delete guard', 'sold product refused; hide it instead');
+  }
+
+  await goto(createdPath);
+  await waitFor(`document.body.innerText.includes('Delete this product')`, { label: 'edit page' });
+  console.log('  delete:', await clickUntil('Delete product', `location.pathname === '/admin/products'`, {
+    tries: 5,
+    label: 'deleted and redirected',
+  }));
+  await waitFor(`!document.body.innerText.includes('Walkthrough Test Product')`, { label: 'gone from the list' });
+  pass('admin delete product', `${handle} created, listed and removed again`);
+
+  await goto('/admin/customers');
+  await waitFor(`document.querySelectorAll('a[href^="/admin/customers/"]').length > 0`, { label: 'customer rows' });
+  pass('admin customers list', `${await evaluate(`document.querySelectorAll('a[href^="/admin/customers/"]').length`)} account links`);
+  await shot('23-admin-customers-desktop');
+
+  await goto('/admin/customers?q=shopper');
+  if (await evaluate(`document.body.innerText.includes('shopper@example.com')`)) pass('customer search', 'one account matches shopper');
+  else fail('customer search', 'shopper@example.com did not come back');
+
+  const linkTo = async (name) =>
+    evaluate(`(() => {
+      const link = [...document.querySelectorAll('a[href^="/admin/customers/"]')]
+        .find((a) => (a.innerText || '').includes(${JSON.stringify(name)}));
+      return link ? link.getAttribute('href') : 'NOT FOUND';
+    })()`);
+
+  await goto('/admin/customers');
+  const shopperPath = await linkTo('Sample shopper');
+  if (shopperPath === 'NOT FOUND') fail('role control', 'sample shopper account missing');
+  else {
+    await goto(shopperPath);
+    await waitFor(`document.body.innerText.includes('Make admin')`, { label: 'role control' });
+    await clickUntil('Make admin', `document.body.innerText.includes('Make customer')`, {
+      tries: 5,
+      label: 'role flipped to admin',
+    });
+    pass('role promotion', 'shopper promoted, control now offers demotion');
+    await clickUntil('Make customer', `document.body.innerText.includes('Make admin')`, {
+      tries: 5,
+      label: 'role restored',
+    });
+    pass('role demotion', 'restored to CUSTOMER, both writes audited');
+  }
+
+  await goto('/admin/customers');
+  const adminPath = await linkTo('Store admin');
+  if (adminPath === 'NOT FOUND') fail('self-role guard', 'signed-in admin account missing');
+  else {
+    await goto(adminPath);
+    await waitFor(`document.body.innerText.includes('Make customer')`, { label: 'role control' });
+    await clickUntil('Make customer', `document.body.innerText.includes('cannot change your own role')`, {
+      tries: 5,
+      label: 'self-change refused',
+    });
+    pass('self-role guard', 'an admin cannot demote themselves');
+  }
+
+  await goto('/admin/inventory');
+  if (await evaluate(`document.body.innerText.includes('product.create')`)) pass('audit trail', 'catalogue writes recorded');
+  else fail('audit trail', 'no product.create entry in the recent operations list');
+
+  // 11. Mobile pass over the same surfaces
   await setViewport(390, 844, true);
   // The desktop order emptied the cart, and /checkout redirects when it is empty,
   // so re-seed it or the mobile checkout shot proves nothing.
   await goto('/products/wireless-headphones', { wait: 900 });
   console.log('  mobile add:', await clickUntil('Add to cart', 'document.body.innerText.includes("Added")', { label: 'mobile cart write' }));
-  const mobile = [['/', '12-home-mobile'], ['/products/wireless-headphones', '13-product-mobile'], ['/cart', '14-cart-mobile'], ['/checkout', '15-checkout-mobile'], [`/order/${reference}`, '16-order-mobile'], ['/admin', '17-admin-mobile'], ['/admin/orders', '18-admin-orders-mobile'], ['/admin/assets', '20-admin-assets-mobile']];
+  const mobile = [
+    ['/', '12-home-mobile'],
+    ['/products/wireless-headphones', '13-product-mobile'],
+    ['/cart', '14-cart-mobile'],
+    ['/checkout', '15-checkout-mobile'],
+    [`/order/${reference}`, '16-order-mobile'],
+    ['/admin', '17-admin-mobile'],
+    ['/admin/orders', '18-admin-orders-mobile'],
+    ['/admin/assets', '20-admin-assets-mobile'],
+    ['/admin/products', '24-admin-products-mobile'],
+    ['/admin/customers', '25-admin-customers-mobile'],
+  ];
   for (const [path, name] of mobile) {
     await goto(path, { wait: 900 });
     const over = await overflow();

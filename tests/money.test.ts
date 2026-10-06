@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { addShipping, formatMoney, toMajorAmount } from '@/lib/money';
+import { addShipping, formatMoney, toCents, toMajorAmount } from '@/lib/money';
 import { CurrencyMismatch, convertMinorUnits } from '@/lib/currency';
 
 describe('money', () => {
@@ -21,6 +21,23 @@ describe('money', () => {
   it('is free over the threshold and flat below it', () => {
     expect(addShipping(299_999)).toBe(2_500);
     expect(addShipping(300_000)).toBe(0);
+  });
+});
+
+describe('prices typed in major units', () => {
+  it('converts whole and decimal amounts to integer cents', () => {
+    expect(toCents('1200')).toBe(120_000);
+    expect(toCents('1,200.50')).toBe(120_050);
+    expect(toCents('0.05')).toBe(5);
+    expect(toCents('99.9')).toBe(9_990);
+  });
+
+  it('refuses anything that is not a clean amount', () => {
+    expect(toCents('12.345')).toBeNull();
+    expect(toCents('-5')).toBeNull();
+    expect(toCents('1e3')).toBeNull();
+    expect(toCents('Br 100')).toBeNull();
+    expect(toCents('')).toBeNull();
   });
 });
 

@@ -76,3 +76,15 @@ export async function requireAdmin(): Promise<AuthUser> {
   if (user.role !== 'ADMIN') throw new Error('ADMIN_REQUIRED');
   return user;
 }
+
+/**
+ * The mutation-time version of the gate: reads the role back from the database
+ * instead of trusting the session, so a demoted admin cannot finish a write.
+ */
+export async function guardAdmin(): Promise<{ id: string; email: string } | null> {
+  const user = await currentUser();
+  if (!user) return null;
+  const fresh = await prisma.user.findUnique({ where: { id: user.id }, select: { id: true, role: true, email: true } });
+  if (fresh?.role !== 'ADMIN') return null;
+  return { id: fresh.id, email: fresh.email };
+}

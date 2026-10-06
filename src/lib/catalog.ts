@@ -49,3 +49,13 @@ export function revalidateProductSlug(slug: string) {
   revalidatePath(`/products/${slug}`);
   revalidatePath('/products');
 }
+
+/** URL handle for a product or category name, shared by seeding and the admin form. */
+export function slugify(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+}

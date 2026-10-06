@@ -28,6 +28,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         <Link href="/admin" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
           Overview
         </Link>
+        <Link href="/admin/products" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
+          Products
+        </Link>
         <Link href="/admin/orders" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
           Orders
         </Link>
@@ -36,6 +39,9 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </Link>
         <Link href="/admin/assets" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
           Images
+        </Link>
+        <Link href="/admin/customers" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
+          Customers
         </Link>
         <span className="ml-auto text-xs text-neutral-500">{user.email}</span>
       </nav>

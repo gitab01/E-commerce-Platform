@@ -28,6 +28,17 @@ export function toMajorAmount(cents: number): string {
   return (cents / 100).toFixed(2);
 }
 
+/**
+ * Price typed in major units ("1,234.5") to integer minor units. Anything that
+ * would land on a fractional cent is refused rather than rounded.
+ */
+export function toCents(input: string): number | null {
+  const cleaned = input.replace(/[\s,]/g, '');
+  if (!/^\d{1,9}(\.\d{1,2})?$/.test(cleaned)) return null;
+  const [whole, fraction = ''] = cleaned.split('.');
+  return Number(whole) * 100 + Number(`${fraction}00`.slice(0, 2));
+}
+
 export function addShipping(subtotalCents: number): number {
   return subtotalCents >= 300_000 ? 0 : SHIPPING_FLAT_CENTS;
 }

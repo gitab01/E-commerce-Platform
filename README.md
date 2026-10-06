@@ -1,4 +1,4 @@
-# E-commerce Platform
+# Shega Mart
 
 Storefront + admin system where inventory, cart and payment state cannot disagree — even when two people buy the
 last unit at the same time.
@@ -78,12 +78,13 @@ The concurrency test fires 8 parallel checkouts against a variant with one unit 
 and no oversell.
 
 ```bash
-npm run verify:ui   # drives headless Chrome: browse -> cart -> checkout -> pay -> admin transitions -> stock guard
+npm run verify:ui   # headless Chrome: browse -> cart -> checkout -> pay -> admin transitions -> stock guard -> CRUD
 ```
 
 It walks the real UI at 1280px and 390px, asserts the order row's status badge after each admin transition, checks that
-an over-draw is refused with the database's own message, and fails on any horizontal overflow on mobile. Screenshots are
-written to `<temp>/qoder-ecom/shots`.
+an over-draw is refused with the database's own message, creates a throwaway product through the dashboard, buys
+nothing with it, deletes it again, and confirms that deleting a sold product or demoting yourself is refused. It fails
+on any horizontal overflow on mobile. Screenshots are written to `<temp>/qoder-ecom/shots`.
 
 ## Caching
 
@@ -111,6 +112,12 @@ manual reconciliation run. `/admin/orders` — filter by state or search referen
 `/admin/inventory` — stock adjustments; a negative that would cross zero is rejected by the database constraint, and
 every adjustment is written to `audit_log`.
 `/admin/assets` — replace a product's image with an upload; the bytes go to object storage and the swap is audited.
+`/admin/products` — create, edit and delete catalogue entries; variants are added inline, with prices typed in whole
+Birr and stored as integer cents. A row that appears in `order_items` cannot be deleted — the write is refused and the
+product is hidden instead, because immutable line items are what keep past orders readable.
+`/admin/customers` — search accounts, see confirmed spend and order history, promote or demote a role. An admin cannot
+change their own role, the last admin cannot be demoted, and an account with orders is never deleted: those orders carry
+`userId`, and removing it would silently rewrite them as guest purchases.
 
 Access is gated twice: the admin layout checks the session, and every admin mutation re-reads the role from the
 database — so revoking a role takes effect on the next request.

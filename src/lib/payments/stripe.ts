@@ -7,7 +7,7 @@ let cached: Stripe | null = null;
 function client(): Stripe {
   const key = process.env.STRIPE_SECRET_KEY;
   if (!key) throw new Error('STRIPE_NOT_CONFIGURED');
-  cached ??= new Stripe(key, { typescript: true, appInfo: { name: 'ecommerce-platform-checkout' } });
+  cached ??= new Stripe(key, { typescript: true, appInfo: { name: 'shega-mart-checkout' } });
   return cached;
 }
 

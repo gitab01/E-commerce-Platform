@@ -16,7 +16,7 @@ a verified gateway event.
 | Concurrent checkout on the last unit resolves to one winner | conditional `UPDATE ... WHERE stock >= qty` inside the checkout transaction (`src/lib/checkout.ts`), plus `CHECK (stock >= 0)` in Postgres (`prisma/migrations/20261005010000_hard_constraints/migration.sql`) |
 | Payment truth comes from webhooks, never the redirect | `src/app/api/webhooks/{stripe,chapa}/route.ts` → `markOrderPaid` (`src/lib/fulfillment.ts`); the success URL only renders a page |
 | Cart prices are re-validated server-side | `loadCartLines` reads prices from the variant rows; the request never carries a price |
-| Abandoned checkouts release stock | `reservedAt`/`expiresAt` + `reconcileStaleReservations`, run by Vercel Cron every 10 minutes (`vercel.json`) |
+| Abandoned checkouts release stock | `reservedAt`/`expiresAt` + `reconcileStaleReservations`, run by Vercel Cron (`vercel.json`; daily on Hobby, every 10 minutes on Pro) and on demand from the dashboard |
 | A retried webhook cannot double-apply | `(provider, externalId)` unique row written in the same transaction as the status change |
 | Illegal transitions are visible, not silent | `assertTransition` in `src/lib/order-state.ts`; rejections are recorded in `order_events` |
 
@@ -98,7 +98,9 @@ tracking, account and admin are dynamic by design.
 
 - Build command `vercel-build` runs `prisma generate && prisma migrate deploy && next build`; migrations never run at
   application startup.
-- `vercel.json` schedules `/api/cron/reconcile` every 10 minutes; the route requires `Authorization: Bearer $CRON_SECRET`.
+- `vercel.json` schedules `/api/cron/reconcile` daily at 03:00 UTC; the route requires `Authorization: Bearer $CRON_SECRET`.
+  Vercel Hobby only accepts a once-a-day schedule — move it back to `*/10 * * * *` on Pro. Until then an abandoned
+  checkout can hold stock for up to a day, so `/admin` exposes a manual reconciliation run for when it matters.
 - Env: `DATABASE_URL` (Neon pooled), `DIRECT_DATABASE_URL` (Neon direct, for migrations), `APP_URL`, gateway keys,
   `CRON_SECRET`. Optional: `AWS_ENDPOINT_URL_S3`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`,
   `S3_BUCKET` — without them admin image uploads report that storage is not configured.

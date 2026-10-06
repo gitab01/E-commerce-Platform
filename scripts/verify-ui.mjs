@@ -633,6 +633,22 @@ async function main() {
     await shot(name);
   }
 
+  // 13. Tablet pass: the in-between width is where a fixed column grid breaks
+  // first, and neither of the two passes above would notice.
+  await setViewport(768, 1024, false);
+  for (const [path, name] of mobile) {
+    await goto(path, { wait: 900 });
+    const over = await overflow();
+    if (over > 1) fail(`tablet overflow ${path}`, `${over}px past the viewport`);
+    else pass(`tablet ${path}`, 'no horizontal overflow');
+    const clipped = await evaluate(`(() => {
+      const badge = document.querySelector('a[aria-label^="Cart"]');
+      return badge ? Math.round(badge.getBoundingClientRect().right - window.innerWidth) : -1;
+    })()`);
+    if (clipped > 1) fail(`tablet cart badge ${path}`, `badge ${clipped}px past the viewport`);
+    await shot(name.replace('-mobile', '-tablet'));
+  }
+
   console.log(JSON.stringify(report, null, 1));
   ws.close();
   chrome.kill();

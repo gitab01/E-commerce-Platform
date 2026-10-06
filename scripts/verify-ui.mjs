@@ -2,7 +2,7 @@
 // browse -> add to cart -> checkout -> demo payment -> PAID timeline -> admin
 // transitions -> stock guard, at desktop and mobile widths. Screenshots land in
 // <temp>/qoder-ecom/shots. Run with: node scripts/verify-ui.mjs
-// Overrides: BASE_URL, CHROME_PATH, CDP_PORT.
+// Overrides: BASE_URL, CHROME_PATH, CDP_PORT, SEED_ADMIN_EMAIL, SEED_ADMIN_PASSWORD.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -23,6 +23,10 @@ const CHROME =
   ].find((candidate) => fs.existsSync(candidate)) ??
   'chrome';
 const BASE = process.env.BASE_URL ?? 'http://localhost:3000';
+// Rotating the seed admin password (npm run admin:password) must not break this
+// run, so the credentials the walkthrough signs in with come from the environment.
+const SEED_ADMIN_EMAIL = process.env.SEED_ADMIN_EMAIL ?? 'admin@example.com';
+const SEED_ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD ?? 'change-me-please';
 const PORT = Number(process.env.CDP_PORT ?? 9200 + (Date.now() % 400));
 const TMP = path.join(os.tmpdir(), 'qoder-ecom');
 const SHOTS = path.join(TMP, 'shots');
@@ -329,8 +333,8 @@ async function main() {
   // 7. Admin: double-gated routes and real transitions
   await goto('/login');
   await waitFor('document.querySelector("[name=email]")', { label: 'login form' });
-  await typeInto('email', 'admin@example.com');
-  await typeInto('password', 'change-me-please');
+  await typeInto('email', SEED_ADMIN_EMAIL);
+  await typeInto('password', SEED_ADMIN_PASSWORD);
   console.log('  login:', await clickUntil('Sign in', 'location.pathname.startsWith("/account") || document.body.innerText.includes("Orders")', { perTry: 20000, label: 'signed in' }));
   pass('admin sign in', 'session accepted');
   // The header is prerendered, so who you are has to come from this endpoint.
@@ -568,8 +572,8 @@ async function main() {
   await clickUntil('Sign out', `location.pathname !== '/account'`, { tries: 5, label: 'signed out the test admin' });
   await goto('/login');
   await waitFor(`document.querySelector('[name="email"]')`, { label: 'login form' });
-  await typeInto('email', 'admin@example.com');
-  await typeInto('password', 'change-me-please');
+  await typeInto('email', SEED_ADMIN_EMAIL);
+  await typeInto('password', SEED_ADMIN_PASSWORD);
   await clickUntil(
     'Sign in',
     `location.pathname.startsWith('/account') || document.body.innerText.includes('Orders')`,

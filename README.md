@@ -67,6 +67,12 @@ with `prisma db push` instead of migrations, `npm run db:hardening` re-applies t
 Seed admin credentials come from `SEED_ADMIN_EMAIL` / `SEED_ADMIN_PASSWORD`; change them before seeding a shared
 database.
 
+```bash
+npm run admin:password -- you@example.com   # type the new password twice; existing sessions for that account end
+```
+
+The password is read at a prompt, so it never enters shell history or a file.
+
 ### Tests
 
 ```bash
@@ -81,10 +87,13 @@ and no oversell.
 npm run verify:ui   # headless Chrome: browse -> cart -> checkout -> pay -> admin transitions -> stock guard -> CRUD
 ```
 
-It walks the real UI at 1280px and 390px, asserts the order row's status badge after each admin transition, checks that
-an over-draw is refused with the database's own message, creates a throwaway product through the dashboard, buys
-nothing with it, deletes it again, and confirms that deleting a sold product or demoting yourself is refused. It fails
-on any horizontal overflow on mobile. Screenshots are written to `<temp>/qoder-ecom/shots`.
+It walks the real UI at 1280px, 768px and 390px, asserts the order row's status badge after each admin transition, checks
+that an over-draw is refused with the database's own message, creates a throwaway product through the dashboard, buys
+nothing with it, deletes it again, and confirms that deleting a sold product or demoting yourself is refused. It also
+adds an admin from the dashboard, signs in as that account to prove the credentials work, and has a second administrator
+delete it. Because the walkthrough writes to the same database production reads, it clears its own leftover rows before
+starting. It fails on any horizontal overflow at the narrower widths. Screenshots are written to
+`<temp>/qoder-ecom/shots`.
 
 ## Caching
 

@@ -46,6 +46,9 @@ if (first.length < 8) {
     // A rotated password must not leave sessions issued under the old one alive.
     const sessions = await db.session.deleteMany({ where: { userId: user.id } });
     console.log(`password updated for ${email} (${user.role}); ${sessions.count} active session(s) signed out.`);
+    if (email === 'admin@example.com') {
+      console.log('note: scripts/verify-ui.mjs signs in as this account. Put the new password in .env as SEED_ADMIN_PASSWORD or the walkthrough fails at login.');
+    }
   } catch (error) {
     if (error?.code === 'P2025') console.error(`refused: no account with that email (${email}).`);
     else throw error;

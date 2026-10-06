@@ -1,0 +1,41 @@
+# Render Blueprint for the Shega Mart store.
+#
+# This app has no separate backend: the server actions, /api routes, webhooks and
+# the reconciliation endpoint all live in this Next.js service, and they are
+# already running on Vercel production. Deploying it here is a second copy of the
+# same thing, so point DATABASE_URL at a Neon *branch* (staging data) rather than
+# the production branch unless you have a reason to split payment traffic.
+#
+# Every variable marked `sync: false` is left blank on purpose. Fill them in the
+# Render dashboard after the first build fails for a missing variable; never
+# commit a real value to this file.
+services:
+  - type: web
+    name: shega-mart
+    runtime: node
+    plan: free
+    rootDir: .
+    installCommand: npm install --legacy-peer-deps
+    # Migrations run here because this file cannot reuse Vercel's build script.
+    buildCommand: npx prisma migrate deploy && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/nav
+    envVars:
+      - key: NODE_VERSION
+        value: '22'
+      # Render's free Node plan gives 512 MB; Turbopack's default heap does not
+      # fit in it, and the build dies with exit code 134 without this.
+      - key: NODE_OPTIONS
+        value: --max-old-space-size=400
+      - key: DATABASE_URL
+        sync: false
+      - key: DIRECT_DATABASE_URL
+        sync: false
+      # Must be this service's own URL, or a checkout started here redirects its
+      # callback to Vercel and the order never gets confirmed on this copy.
+      - key: APP_URL
+        sync: false
+      - key: CRON_SECRET
+        sync: false
+      - key: DEMO_PAYMENTS
+        value: 'true'

@@ -77,7 +77,7 @@ export const chapaGateway: PaymentGateway = {
         callback_url: `${process.env.APP_URL}/api/webhooks/chapa`,
         return_url: `${process.env.APP_URL}/order/${order.reference}?paid=1`,
         customization: {
-          title: 'E-commerce Platform',
+          title: 'Shega Mart',
           description: `Order ${order.reference} — ${lines.length} line item${lines.length === 1 ? '' : 's'}`,
         },
         meta: { order_reference: order.reference, hide_receipt: false },

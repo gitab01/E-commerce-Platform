@@ -4,7 +4,7 @@ import { SiteHeader } from '@/components/site-header';
 import { SiteFooter } from '@/components/site-footer';
 
 export const metadata: Metadata = {
-  title: { default: 'E-commerce Platform', template: '%s · E-commerce Platform' },
+  title: { default: 'Shega Mart', template: '%s · Shega Mart' },
   description:
     'Storefront and admin system with transactional stock reservation and payment state driven only by verified gateway webhooks.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000'),

@@ -82,6 +82,78 @@ const CATALOGUE = [
       { sku: 'CAM-4K-WHT', name: 'White', priceCents: 72_000, stock: 0 },
     ],
   },
+  {
+    slug: 'laptop-sleeve',
+    title: 'Laptop Sleeve',
+    image: '/products/sleeve.svg',
+    category: 'Accessories',
+    description:
+      'Dense felt shell with a brushed lining and a leather-pull zipper, sized so the lid never touches the walls. Fits a 14" or 16" machine flat.',
+    variants: [
+      { sku: 'SLV-14-CHR', name: '14" / Charcoal', priceCents: 89_000, stock: 18 },
+      { sku: 'SLV-16-CHR', name: '16" / Charcoal', priceCents: 99_000, stock: 7 },
+    ],
+  },
+  {
+    slug: 'gan-charger-65w',
+    title: '65W GaN Charger',
+    image: '/products/charger.svg',
+    category: 'Accessories',
+    description:
+      'Single USB-C port delivering 65 W over PD 3.0, enough to charge a laptop from empty overnight. GaN switching keeps it pocket-sized and cool.',
+    variants: [
+      { sku: 'CHG-65-US', name: 'US plug', priceCents: 165_000, stock: 11 },
+      { sku: 'CHG-65-EU', name: 'EU plug', priceCents: 165_000, stock: 0 },
+    ],
+  },
+  {
+    slug: 'wireless-mouse',
+    title: 'Wireless Ergonomic Mouse',
+    image: '/products/mouse.svg',
+    category: 'Accessories',
+    description:
+      'Sculpted right-hand shell with a scroll wheel that free-spins, six programmable buttons and a silent click. Bluetooth or 2.4 GHz dongle.',
+    variants: [
+      { sku: 'MSE-ERG-BLK', name: 'Graphite', priceCents: 99_000, stock: 8 },
+      { sku: 'MSE-ERG-SLV', name: 'Silver', priceCents: 99_000, stock: 4 },
+    ],
+  },
+  {
+    slug: 'monitor-27-4k',
+    title: '27" 4K Monitor',
+    image: '/products/monitor.svg',
+    category: 'Computers',
+    description:
+      'Flat 27-inch IPS panel at 3840 x 2160 with 99% sRGB from the factory, a 90 W USB-C input that charges the laptop it drives, and a stand that lifts, tilts and turns to portrait.',
+    variants: [
+      { sku: 'MON-27-4K-STD', name: 'Standard', priceCents: 980_000, stock: 5 },
+      { sku: 'MON-27-4K-HDR', name: 'HDR 600', priceCents: 1_240_000, stock: 0 },
+    ],
+  },
+  {
+    slug: 'portable-ssd',
+    title: 'Portable NVMe SSD',
+    image: '/products/ssd.svg',
+    category: 'Accessories',
+    description:
+      'Pocket drive that holds a full video project and moves it in seconds over USB 3.2 Gen 2. Aluminium shell doubles as the heatsink, and it is drop-rated to two metres.',
+    variants: [
+      { sku: 'SSD-NV-1TB', name: '1 TB', priceCents: 420_000, stock: 14 },
+      { sku: 'SSD-NV-2TB', name: '2 TB', priceCents: 760_000, stock: 6 },
+    ],
+  },
+  {
+    slug: 'noise-cancelling-earbuds',
+    title: 'Noise-Cancelling Earbuds',
+    image: '/products/earbuds.svg',
+    category: 'Audio',
+    description:
+      'In-ear cancelling that flattens a bus engine, eight hours per charge and a case that adds three more. Pair of four tip sizes keeps the seal without pressure.',
+    variants: [
+      { sku: 'EBD-NC-WHT', name: 'Ivory', priceCents: 145_000, stock: 21 },
+      { sku: 'EBD-NC-BLK', name: 'Graphite', priceCents: 145_000, stock: 9 },
+    ],
+  },
 ];
 
 async function main() {

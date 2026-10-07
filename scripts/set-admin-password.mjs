@@ -19,14 +19,18 @@ function hashPassword(password) {
   return `scrypt$${salt.toString('base64')}$${derived.toString('base64')}`;
 }
 
-async function ask(question) {
-  const rl = createInterface({ input: process.stdin, output: process.stdout });
-  try {
-    return await new Promise((resolve) => rl.once('line', resolve));
-  } finally {
-    rl.close();
-  }
-}
+// One interface for the whole run, reading from the start: with piped stdin both
+// lines arrive before the second question is asked, so anything not yet claimed
+// has to be queued rather than dropped.
+const rl = createInterface({ input: process.stdin });
+const queued = [];
+const waiting = [];
+rl.on('line', (line) => (waiting.length ? waiting.shift()(line) : queued.push(line)));
+const ask = (question) => {
+  process.stdout.write(question);
+  if (queued.length) return Promise.resolve(queued.shift());
+  return new Promise((resolve) => waiting.push(resolve));
+};
 
 const first = await ask(`New password for ${email}: `);
 if (first.length < 8) {
@@ -57,3 +61,5 @@ if (first.length < 8) {
     await db.$disconnect();
   }
 }
+
+rl.close();

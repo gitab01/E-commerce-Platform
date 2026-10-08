@@ -11,10 +11,10 @@ import { createAccountAfterPayment } from '@/app/actions/account';
 export function OfferAccount({ email }: { email: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
-  const [message, setMessage] = useState<string | null>(null);
+  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null);
 
   return (
-    <section className="mt-12 rounded-lg border border-neutral-200 p-5">
+    <section className="card mt-10 p-5">
       <h2 className="text-sm font-semibold">Keep an account for next time</h2>
       <p className="mt-1 text-xs text-neutral-600">
         Set a password on {email} to see past orders and reorder in one tap.
@@ -30,34 +30,33 @@ export function OfferAccount({ email }: { email: string }) {
               password: String(form.get('password') ?? ''),
               name: String(form.get('name') ?? '') || undefined,
             });
-            setMessage(result.ok ? 'Account created — this page now shows your order history.' : 'That did not work; the email may already have an account.');
+            setMessage({
+              text: result.ok
+                ? 'Account created — this page now shows your order history.'
+                : 'That did not work; the email may already have an account.',
+              ok: result.ok,
+            });
             if (result.ok) router.refresh();
           });
         }}
       >
-        <label className="text-xs text-neutral-600">
-          Name
-          <input name="name" className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-40" />
+        <label>
+          <span className="label">Name</span>
+          <input name="name" className="field sm:w-40" />
         </label>
-        <label className="text-xs text-neutral-600">
-          Password (8+ characters)
-          <input
-            name="password"
-            type="password"
-            required
-            minLength={8}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm sm:w-56"
-          />
+        <label>
+          <span className="label">Password (8+ characters)</span>
+          <input name="password" type="password" required minLength={8} className="field sm:w-56" />
         </label>
-        <button
-          type="submit"
-          disabled={pending}
-          className="shrink-0 whitespace-nowrap rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
-        >
+        <button type="submit" disabled={pending} className="btn btn-primary shrink-0 whitespace-nowrap">
           {pending ? 'Creating…' : 'Create account'}
         </button>
       </form>
-      {message && <p role="status" className="mt-3 text-xs text-neutral-700">{message}</p>}
+      {message && (
+        <p role="status" className={`mt-3 text-xs ${message.ok ? 'text-success' : 'text-danger'}`}>
+          {message.text}
+        </p>
+      )}
     </section>
   );
 }

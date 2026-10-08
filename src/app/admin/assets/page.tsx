@@ -20,7 +20,7 @@ export default async function AdminAssetsPage() {
           and the cache lifetime. PNG, JPEG and WebP up to {MAX_IMAGE_BYTES / 1024 / 1024} MB.
         </p>
         {!assetsConfigured() && (
-          <p className="mt-3 rounded-md border border-neutral-300 p-3 text-sm text-neutral-800">
+          <p className="card mt-4 p-4 text-sm text-neutral-800">
             Object storage is not configured here. Set AWS_ENDPOINT_URL_S3, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY and
             S3_BUCKET, then restart the server. Seeded local artwork stays in place until you do.
           </p>
@@ -29,8 +29,8 @@ export default async function AdminAssetsPage() {
 
       <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {products.map((product) => (
-          <li key={product.id} className="flex gap-4 rounded-md border border-neutral-200 p-4">
-            <div className="relative h-20 w-20 shrink-0 rounded-md border border-neutral-100">
+          <li key={product.id} className="card flex gap-4 p-4 transition-colors hover:border-neutral-400">
+            <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-line bg-white">
               <Image src={product.image} alt="" fill sizes="80px" className="object-contain p-1" />
             </div>
             <div className="min-w-0 flex-1">

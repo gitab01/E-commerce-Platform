@@ -52,51 +52,58 @@ export function CheckoutForm({
     });
   }
 
-  const field = 'mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm outline-none focus:border-neutral-900';
-
   return (
-    <form onSubmit={submit} className="flex flex-col gap-6">
-      <section className="rounded-lg border border-neutral-200 p-5">
-        <h2 className="text-sm font-semibold">Contact</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label className="text-xs text-neutral-600">
+    <form onSubmit={submit} className="flex flex-col gap-5">
+      <section className="card p-5">
+        <h2 className="text-sm font-semibold text-ink">
+          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white">1</span>
+          Contact
+        </h2>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="label">
             Email
-            <input name="email" type="email" required defaultValue={defaults.email} className={field} autoComplete="email" />
+            <input name="email" type="email" required defaultValue={defaults.email} className="field" autoComplete="email" />
           </label>
-          <label className="text-xs text-neutral-600">
+          <label className="label">
             Phone (optional)
-            <input name="phone" type="tel" defaultValue="" className={field} autoComplete="tel" placeholder="+251…" />
+            <input name="phone" type="tel" defaultValue="" className="field" autoComplete="tel" placeholder="+251…" />
           </label>
         </div>
-        {fieldErrors.email && <p className="mt-2 text-xs text-red-700">Enter a valid email address.</p>}
+        {fieldErrors.email && <p className="mt-2 text-xs text-danger">Enter a valid email address.</p>}
       </section>
 
-      <section className="rounded-lg border border-neutral-200 p-5">
-        <h2 className="text-sm font-semibold">Delivery</h2>
-        <div className="mt-3 grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <label className="text-xs text-neutral-600 sm:col-span-2">
+      <section className="card p-5">
+        <h2 className="text-sm font-semibold text-ink">
+          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white">2</span>
+          Delivery
+        </h2>
+        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <label className="label sm:col-span-2">
             Full name
-            <input name="fullName" required minLength={2} defaultValue={defaults.fullName} className={field} />
+            <input name="fullName" required minLength={2} defaultValue={defaults.fullName} className="field" autoComplete="name" />
           </label>
-          <label className="text-xs text-neutral-600 sm:col-span-2">
+          <label className="label sm:col-span-2">
             Address
-            <input name="addressLine" required minLength={4} className={field} autoComplete="street-address" />
+            <input name="addressLine" required minLength={4} className="field" autoComplete="street-address" />
           </label>
-          <label className="text-xs text-neutral-600">
+          <label className="label">
             City
-            <input name="city" required minLength={2} defaultValue="Addis Ababa" className={field} />
+            <input name="city" required minLength={2} defaultValue="Addis Ababa" className="field" autoComplete="address-level2" />
           </label>
         </div>
       </section>
 
-      <fieldset className="rounded-lg border border-neutral-200 p-5">
-        <legend className="text-sm font-semibold">Pay with</legend>
-        <div className="mt-3 flex flex-col gap-2">
+      <fieldset className="card p-5">
+        <legend className="text-sm font-semibold text-ink">
+          <span className="mr-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-ink text-xs font-semibold text-white align-middle">3</span>
+          Pay with
+        </legend>
+        <div className="mt-4 flex flex-col gap-2">
           {providers.map((entry) => (
             <label
               key={entry.id}
-              className={`flex cursor-pointer items-start gap-3 rounded-md border p-3 text-sm ${
-                provider === entry.id ? 'border-neutral-900 bg-neutral-50' : 'border-neutral-200 hover:bg-neutral-50'
+              className={`flex cursor-pointer items-start gap-3 rounded-md border p-3.5 text-sm transition-colors ${
+                provider === entry.id ? 'border-ink' : 'border-line hover:border-neutral-400'
               }`}
             >
               <input
@@ -105,11 +112,11 @@ export function CheckoutForm({
                 value={entry.id}
                 checked={provider === entry.id}
                 onChange={() => setProvider(entry.id)}
-                className="mt-0.5"
+                className="mt-1 accent-neutral-900"
               />
-              <span>
-                <span className="block font-medium text-neutral-950">{entry.label}</span>
-                <span className="block text-xs text-neutral-600">{entry.hint}</span>
+              <span className="min-w-0">
+                <span className="block font-medium text-ink">{entry.label}</span>
+                <span className="mt-0.5 block text-xs leading-5 text-neutral-600">{entry.hint}</span>
               </span>
             </label>
           ))}
@@ -117,16 +124,12 @@ export function CheckoutForm({
       </fieldset>
 
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+        <p role="alert" className="rounded-md border border-danger/20 bg-danger/5 p-3 text-sm text-danger">
           {error}
         </p>
       )}
 
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-neutral-900 px-5 py-3 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className="btn btn-primary btn-block py-3 sm:w-auto sm:px-5">
         {pending ? 'Reserving stock…' : 'Continue to payment'}
       </button>
       <p className="text-xs leading-5 text-neutral-500">

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { setCartItemQuantity } from '@/app/actions/cart';
 import { cartStore } from './cart-badge';
@@ -51,24 +52,34 @@ export function CartLines({ rows }: { rows: CartRow[] }) {
   if (rows.length === 0) return null;
 
   return (
-    <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
+    <ul className="card divide-y divide-line">
       {rows.map((row) => {
         const quantity = quantityOf(row);
         const atLimit = quantity >= row.stock;
         return (
-          <li key={row.variantId} className="flex items-center gap-4 py-4">
+          <li key={row.variantId} className="flex items-center gap-3 p-3 sm:gap-4 sm:p-4">
+            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-md border border-line bg-neutral-50">
+              <Image
+                src={row.image}
+                alt={row.title}
+                fill
+                sizes="56px"
+                className="object-contain p-1.5"
+              />
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-sm font-medium text-neutral-950">{row.title}</p>
-              <p className="text-xs text-neutral-500">
+              <p className="truncate text-sm font-medium text-ink">{row.title}</p>
+              <p className="mt-0.5 text-xs text-neutral-500">
                 {row.variantName} · <span className="font-mono">{row.sku}</span>
               </p>
+              <p className="mt-0.5 text-xs text-neutral-500 sm:hidden">{formatMoney(row.unitPriceCents * quantity)}</p>
               {atLimit && <p className="mt-1 text-xs text-neutral-700">Maximum available quantity selected.</p>}
             </div>
             <div className="flex items-center gap-1">
               <button
                 type="button"
                 onClick={() => update(row, quantity - 1)}
-                className="h-8 w-8 rounded-md border border-neutral-300 text-neutral-800 hover:bg-neutral-100"
+                className="btn h-8 w-8 border border-neutral-300 px-0 text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50"
                 aria-label={`Decrease ${row.title}`}
               >
                 −
@@ -78,21 +89,21 @@ export function CartLines({ rows }: { rows: CartRow[] }) {
                 type="button"
                 onClick={() => update(row, quantity + 1)}
                 disabled={atLimit}
-                className="h-8 w-8 rounded-md border border-neutral-300 text-neutral-800 hover:bg-neutral-100 disabled:opacity-40"
+                className="btn h-8 w-8 border border-neutral-300 px-0 text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50 disabled:opacity-40"
                 aria-label={`Increase ${row.title}`}
               >
                 +
               </button>
             </div>
-            <span className="w-24 text-right text-sm tabular-nums text-neutral-900">
+            <span className="hidden w-24 shrink-0 text-right text-sm tabular-nums text-ink sm:block">
               {formatMoney(row.unitPriceCents * quantity)}
             </span>
           </li>
         );
       })}
-      {pending && <li className="py-2 text-xs text-neutral-500">Saving…</li>}
+      {pending && <li className="px-4 py-2 text-xs text-neutral-500">Saving…</li>}
       {error && (
-        <li role="status" className="py-2 text-xs text-red-700">
+        <li role="status" className="px-4 py-2 text-xs text-danger">
           {error}
         </li>
       )}

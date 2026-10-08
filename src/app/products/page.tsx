@@ -15,16 +15,20 @@ export default async function ProductsPage({
   const products = await publishedProducts(target ? { categoryId: target.id } : {});
 
   return (
-    <div className="container-page py-10">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <div className="container-page py-10 sm:py-12">
+      <div className="flex flex-col gap-5">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">{target ? target.name : 'All products'}</h1>
-          <p className="mt-1 text-sm text-neutral-600">{products.length} products listed.</p>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">
+            {target ? target.name : 'All products'}
+          </h1>
+          <p className="mt-1.5 text-sm text-neutral-600">
+            {products.length} {products.length === 1 ? 'product' : 'products'} listed.
+          </p>
         </div>
-        <nav className="flex flex-wrap gap-2 text-sm" aria-label="Categories">
+        <nav className="scroll-x -mx-4 flex gap-2 px-4 pb-1 text-sm sm:mx-0 sm:flex-wrap sm:px-0 sm:pb-0" aria-label="Categories">
           <Link
             href="/products"
-            className={`rounded-full border px-3 py-1 ${!target ? 'border-neutral-900 bg-neutral-900 text-white' : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100'}`}
+            className={`shrink-0 rounded-full border px-3 py-1 transition-colors ${!target ? 'border-ink bg-ink text-white' : 'border-neutral-300 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50'}`}
           >
             All
           </Link>
@@ -32,10 +36,10 @@ export default async function ProductsPage({
             <Link
               key={entry.id}
               href={`/products?category=${entry.slug}`}
-              className={`rounded-full border px-3 py-1 ${
+              className={`shrink-0 rounded-full border px-3 py-1 transition-colors ${
                 target?.slug === entry.slug
-                  ? 'border-neutral-900 bg-neutral-900 text-white'
-                  : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100'
+                  ? 'border-ink bg-ink text-white'
+                  : 'border-neutral-300 text-neutral-700 hover:border-neutral-400 hover:bg-neutral-50'
               }`}
             >
               {entry.name}

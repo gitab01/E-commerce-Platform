@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import type { Prisma } from '@prisma/client';
 import { formatMoney } from '@/lib/money';
-import { STATUS_LABELS, canTransition } from '@/lib/order-state';
+import { STATUS_LABELS, STATUS_TONES, canTransition } from '@/lib/order-state';
 import { AdminStatusControl } from '@/components/admin-status-control';
 import type { OrderStatus } from '@prisma/client';
 
@@ -46,11 +46,14 @@ export default async function AdminOrdersPage({
       <h1 className="text-2xl font-semibold tracking-tight">Orders</h1>
       <p className="mt-1 text-sm text-neutral-600">{total} matching orders.</p>
 
-      <form className="mt-5 flex flex-wrap items-center gap-2 text-sm" action="/admin/orders">
+      <form
+        className="scroll-x -mx-4 mt-5 flex flex-nowrap items-center gap-2 px-4 text-sm sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        action="/admin/orders"
+      >
         <select
           name="status"
           defaultValue={statusFilter ?? ''}
-          className="rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm"
+          className="shrink-0 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm"
           aria-label="Filter by status"
         >
           <option value="">Any status</option>
@@ -64,23 +67,23 @@ export default async function AdminOrdersPage({
           name="q"
           defaultValue={q ?? ''}
           placeholder="Reference or email"
-          className="w-44 rounded-md border border-neutral-300 px-2.5 py-1.5 text-sm"
+          className="w-44 shrink-0 rounded-md border border-neutral-300 bg-white px-2.5 py-1.5 text-sm placeholder:text-neutral-400"
         />
-        <button type="submit" className="rounded-md bg-neutral-900 px-3 py-1.5 text-sm font-medium text-white hover:bg-neutral-800">
+        <button type="submit" className="btn btn-primary shrink-0 py-1.5">
           Filter
         </button>
         {statusFilter && (
-          <Link href="/admin/orders" className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm hover:bg-neutral-100">
+          <Link href="/admin/orders" className="btn btn-secondary shrink-0 py-1.5">
             Clear
           </Link>
         )}
       </form>
 
-      <ul className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200">
+      <ul className="card mt-6 divide-y divide-line">
         {orders.map((order) => {
           const nextOptions = ALL_STATUSES.filter((candidate) => canTransition(order.status, candidate));
           return (
-            <li key={order.id} className="grid grid-cols-1 gap-3 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
+            <li key={order.id} className="grid grid-cols-1 gap-3 px-5 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
                   <Link
@@ -89,9 +92,7 @@ export default async function AdminOrdersPage({
                   >
                     {order.reference}
                   </Link>
-                  <span className="rounded-full bg-neutral-100 px-2 py-0.5 text-xs text-neutral-700">
-                    {STATUS_LABELS[order.status]}
-                  </span>
+                  <span className={`pill ${STATUS_TONES[order.status]}`}>{STATUS_LABELS[order.status]}</span>
                   <span className="text-xs text-neutral-500">
                     {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium', timeStyle: 'short' }).format(order.createdAt)}
                   </span>
@@ -115,16 +116,18 @@ export default async function AdminOrdersPage({
             </li>
           );
         })}
-        {orders.length === 0 && <li className="py-8 text-center text-sm text-neutral-500">No orders match that filter.</li>}
+        {orders.length === 0 && (
+          <li className="px-5 py-10 text-center text-sm text-neutral-500">No orders match that filter.</li>
+        )}
       </ul>
 
       {pages > 1 && (
-        <nav className="mt-6 flex items-center gap-2 text-sm" aria-label="Pagination">
+        <nav className="mt-6 flex flex-wrap items-center gap-2 text-sm" aria-label="Pagination">
           {Array.from({ length: Math.min(pages, 8) }, (_, index) => index + 1).map((number) => (
             <Link
               key={number}
               href={`/admin/orders?page=${number}${statusFilter ? `&status=${statusFilter}` : ''}${q ? `&q=${q}` : ''}`}
-              className={`rounded-md px-2.5 py-1 ${number === currentPage ? 'bg-neutral-900 text-white' : 'border border-neutral-300 text-neutral-700 hover:bg-neutral-100'}`}
+              className={`btn px-2.5 py-1 tabular-nums ${number === currentPage ? 'btn-primary' : 'btn-secondary'}`}
             >
               {number}
             </Link>

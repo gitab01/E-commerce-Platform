@@ -32,19 +32,21 @@ export default async function DemoPayPage({
 
   return (
     <div className="container-page max-w-xl py-12">
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Demo gateway</p>
-      <h1 className="mt-2 text-2xl font-semibold tracking-tight">Confirm payment for {order.reference}</h1>
+      <p className="eyebrow">Demo gateway</p>
+      <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+        Confirm payment for <span className="tabular-nums">{order.reference}</span>
+      </h1>
 
-      <dl className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
+      <dl className="card mt-6 divide-y divide-line text-sm">
         {order.items.map((item) => (
-          <div key={item.id} className="flex justify-between gap-4 py-2">
+          <div key={item.id} className="flex justify-between gap-4 px-5 py-3">
             <dt className="min-w-0 truncate text-neutral-700">
               {item.quantity} × {item.title} ({item.variantName})
             </dt>
             <dd className="tabular-nums">{formatMoney(item.unitPriceCents * item.quantity)}</dd>
           </div>
         ))}
-        <div className="flex justify-between py-3 font-medium">
+        <div className="flex justify-between px-5 py-3.5 font-semibold">
           <dt>Total</dt>
           <dd className="tabular-nums">{formatMoney(order.totalCents)}</dd>
         </div>
@@ -53,7 +55,7 @@ export default async function DemoPayPage({
       {order.status === 'PENDING' ? (
         <DemoPayButtons reference={order.reference} />
       ) : (
-        <p className="mt-6 rounded-md bg-neutral-100 p-3 text-sm text-neutral-700">
+        <p className="card mt-6 p-4 text-sm text-neutral-700">
           This order is no longer awaiting payment ({order.status.toLowerCase()}).
         </p>
       )}

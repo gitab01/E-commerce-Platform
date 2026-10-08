@@ -45,24 +45,28 @@ export default async function CartPage() {
 
   if (rows.length === 0) {
     return (
-      <div className="container-page py-16 text-center">
-        <h1 className="text-xl font-semibold tracking-tight">Your cart is empty</h1>
-        <p className="mt-2 text-sm text-neutral-600">Adding an item reserves nothing — stock is only held once you start checkout.</p>
-        <Link href="/products" className="mt-6 inline-block rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800">
-          Browse products
-        </Link>
+      <div className="container-page flex justify-center py-16 sm:py-24">
+        <div className="card w-full max-w-md p-8 text-center">
+          <h1 className="text-xl font-semibold tracking-tight text-ink">Your cart is empty</h1>
+          <p className="mt-2 text-sm leading-6 text-neutral-600">
+            Adding an item reserves nothing — stock is only held once you start checkout.
+          </p>
+          <Link href="/products" className="btn btn-primary mt-6">
+            Browse products
+          </Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="container-page py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Cart</h1>
+    <div className="container-page py-10 sm:py-12">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Cart</h1>
       <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
         <div>
           <CartLines rows={rows} />
           <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-            <Link href="/products" className="text-sm text-neutral-600 underline-offset-4 hover:underline">
+            <Link href="/products" className="text-sm text-neutral-600 underline-offset-4 hover:text-ink hover:underline">
               Continue shopping
             </Link>
             <ClearCartButton />

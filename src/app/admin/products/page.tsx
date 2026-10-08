@@ -47,44 +47,57 @@ export default async function AdminProductsPage(props: { searchParams: Promise<{
             instead.
           </p>
         </div>
-        <Link
-          href="/admin/products/new"
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-        >
+        <Link href="/admin/products/new" className="btn btn-primary">
           New product
         </Link>
       </div>
 
-      <form className="flex flex-wrap items-center gap-2" action="/admin/products">
+      <form
+        className="scroll-x -mx-4 flex flex-nowrap items-center gap-2 px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        action="/admin/products"
+      >
         <input
           name="q"
           defaultValue={term}
           placeholder="Search title, handle, SKU or category"
-          className="w-full max-w-xs rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none"
+          className="w-full max-w-xs shrink-0 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-400"
         />
-        <select name="status" defaultValue={status} className="rounded-md border border-neutral-300 px-2 py-2 text-sm">
+        <select
+          name="status"
+          defaultValue={status}
+          className="shrink-0 rounded-md border border-neutral-300 bg-white px-2 py-2 text-sm"
+        >
           <option value="all">All</option>
           <option value="listed">Listed</option>
           <option value="hidden">Hidden</option>
         </select>
-        <button type="submit" className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100">
+        <button type="submit" className="btn btn-secondary shrink-0">
           Filter
         </button>
         {(term || status !== 'all') && (
-          <Link href="/admin/products" className="text-xs text-neutral-500 underline-offset-4 hover:underline">
+          <Link href="/admin/products" className="shrink-0 text-xs text-neutral-500 underline-offset-4 hover:underline">
             Reset
           </Link>
         )}
       </form>
 
-      <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
+      <ul className="card divide-y divide-line">
+        <li className="hidden grid-cols-[1fr_auto_auto_auto] gap-x-4 px-5 py-2.5 sm:grid">
+          <span className="eyebrow">Product</span>
+          <span className="eyebrow w-28 text-right">Stock</span>
+          <span className="eyebrow w-20 text-right">Sold</span>
+          <span className="eyebrow w-20 text-right">State</span>
+        </li>
         {products.map((product) => {
           const sold = product.variants.reduce((sum, variant) => sum + (soldByVariant.get(variant.id) ?? 0), 0);
           const prices = product.variants.map((variant) => variant.priceCents);
           const stock = totalStock(product.variants);
           return (
-            <li key={product.id} className="grid grid-cols-2 gap-x-4 gap-y-1 py-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
-              <div className="col-span-2 min-w-0 sm:col-span-1">
+            <li
+              key={product.id}
+              className="grid grid-cols-3 items-center gap-x-3 gap-y-1 px-5 py-3.5 sm:grid-cols-[1fr_auto_auto_auto]"
+            >
+              <div className="col-span-3 min-w-0 sm:col-span-1">
                 <Link
                   href={`/admin/products/${product.id}`}
                   className="block truncate text-sm font-medium underline-offset-4 hover:underline"
@@ -103,22 +116,24 @@ export default async function AdminProductsPage(props: { searchParams: Promise<{
                   )}
                 </p>
               </div>
-              <span className={`text-sm tabular-nums ${stock === 0 ? 'font-semibold text-neutral-900' : 'text-neutral-600'}`}>
-                {stock} in stock
+              <div className="flex justify-end sm:w-28">
+                <span className={`pill tabular-nums ${stock === 0 ? 'pill-danger' : 'pill-neutral'}`}>
+                  {stock} in stock
+                </span>
+              </div>
+              <span className="justify-self-end text-sm tabular-nums text-neutral-600 sm:w-20 sm:text-right">
+                {sold} sold
               </span>
-              <span className="text-xs tabular-nums text-neutral-500">{sold} sold</span>
-              <span
-                className={`w-fit rounded-full px-2 py-0.5 text-xs ${
-                  product.active ? 'bg-neutral-100 text-neutral-700' : 'bg-neutral-200 text-neutral-600'
-                }`}
-              >
-                {product.active ? 'listed' : 'hidden'}
-              </span>
+              <div className="flex justify-end sm:w-20">
+                <span className={`pill ${product.active ? 'pill-dark' : 'pill-outline'}`}>
+                  {product.active ? 'listed' : 'hidden'}
+                </span>
+              </div>
             </li>
           );
         })}
         {products.length === 0 && (
-          <li className="py-6 text-sm text-neutral-500">
+          <li className="px-5 py-8 text-sm text-neutral-500">
             No products match this search.{' '}
             <Link href="/admin/products/new" className="underline underline-offset-4">
               Add one

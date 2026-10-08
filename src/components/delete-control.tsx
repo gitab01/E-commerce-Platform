@@ -62,11 +62,7 @@ export function DeleteControl({
             else router.refresh();
           });
         }}
-        className={`rounded-md border px-3 py-1.5 text-sm disabled:opacity-50 ${
-          armed
-            ? 'border-red-300 bg-red-50 text-red-800 hover:bg-red-100'
-            : 'border-neutral-300 text-neutral-700 hover:bg-neutral-100'
-        }`}
+        className={`btn ${armed ? 'btn-danger' : 'btn-secondary'} py-1.5`}
       >
         {pending ? 'Deleting…' : armed ? `Confirm: ${label}` : label}
       </button>
@@ -80,7 +76,7 @@ export function DeleteControl({
         </button>
       )}
       {message && (
-        <span role="alert" className="text-xs text-red-700">
+        <span role="alert" className="text-xs text-danger">
           {message}
         </span>
       )}

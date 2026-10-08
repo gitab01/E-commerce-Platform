@@ -21,7 +21,7 @@ export function RunReconciliation() {
             router.refresh();
           })
         }
-        className="rounded-md border border-neutral-300 px-3.5 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100 disabled:opacity-60"
+        className="btn btn-secondary"
       >
         {pending ? 'Running…' : 'Run reconciliation now'}
       </button>

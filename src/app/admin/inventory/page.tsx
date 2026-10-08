@@ -20,9 +20,12 @@ export default async function AdminInventoryPage() {
           {variants.length} sellable variants. Negative adjustments are refused by a database CHECK constraint, not by
           the form.
         </p>
-        <ul className="mt-6 divide-y divide-neutral-200 border-y border-neutral-200">
+        <ul className="card mt-6 divide-y divide-line">
           {variants.map((variant) => (
-            <li key={variant.id} className="grid grid-cols-1 gap-3 py-3 sm:grid-cols-[1fr_auto_auto] sm:items-center">
+            <li
+              key={variant.id}
+              className="grid grid-cols-1 items-center gap-3 px-5 py-3.5 sm:grid-cols-[1fr_auto_auto]"
+            >
               <div className="min-w-0">
                 <Link
                   href={`/products/${variant.product.slug}`}
@@ -35,11 +38,17 @@ export default async function AdminInventoryPage() {
                   {variant.product.active ? 'listed' : 'hidden'}
                 </p>
               </div>
-              <span
-                className={`text-sm tabular-nums ${variant.stock === 0 ? 'font-semibold text-neutral-900' : 'text-neutral-600'}`}
-              >
-                {variant.stock} in stock
-              </span>
+              {variant.stock === 0 ? (
+                <span className="pill pill-danger justify-self-start sm:justify-self-end">Sold out</span>
+              ) : variant.stock <= 3 ? (
+                <span className="pill pill-neutral justify-self-start tabular-nums sm:justify-self-end">
+                  {variant.stock} left
+                </span>
+              ) : (
+                <span className="justify-self-start text-sm tabular-nums text-neutral-500 sm:justify-self-end">
+                  {variant.stock} in stock
+                </span>
+              )}
               <StockAdjust variantId={variant.id} sku={variant.sku} stock={variant.stock} />
             </li>
           ))}
@@ -48,9 +57,9 @@ export default async function AdminInventoryPage() {
 
       <section>
         <h2 className="text-sm font-semibold">Recent operations</h2>
-        <ul className="mt-3 divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
+        <ul className="card mt-3 divide-y divide-line text-sm">
           {audit.map((entry) => (
-            <li key={entry.id} className="grid grid-cols-1 gap-1 py-2.5 sm:grid-cols-[9rem_8rem_1fr]">
+            <li key={entry.id} className="grid grid-cols-1 gap-1 px-5 py-3 sm:grid-cols-[9rem_8rem_1fr]">
               <span className="text-xs tabular-nums text-neutral-500">
                 {new Intl.DateTimeFormat('en-GB', { dateStyle: 'short', timeStyle: 'short' }).format(entry.createdAt)}
               </span>
@@ -60,7 +69,7 @@ export default async function AdminInventoryPage() {
               </span>
             </li>
           ))}
-          {audit.length === 0 && <li className="py-4 text-sm text-neutral-500">No admin operations recorded yet.</li>}
+          {audit.length === 0 && <li className="px-5 py-6 text-sm text-neutral-500">No admin operations recorded yet.</li>}
         </ul>
       </section>
     </div>

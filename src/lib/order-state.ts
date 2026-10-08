@@ -34,5 +34,14 @@ export const STATUS_LABELS: Record<OrderStatus, string> = {
   SHIPPED: 'Shipped',
   DELIVERED: 'Delivered',
   CANCELLED: 'Cancelled',
-  EXPIRED: 'Payment window expired',
+  EXPIRED: 'Expired',
+};
+
+export const STATUS_TONES: Record<OrderStatus, string> = {
+  PENDING: 'pill-outline',
+  PAID: 'pill-success',
+  SHIPPED: 'pill-dark',
+  DELIVERED: 'pill-success',
+  CANCELLED: 'pill-neutral',
+  EXPIRED: 'pill-danger',
 };

@@ -34,12 +34,12 @@ export function RoleControl({ userId, current }: { userId: string; current: Role
             if (result.ok) router.refresh();
           });
         }}
-        className="rounded-md border border-neutral-300 px-3 py-1.5 text-sm text-neutral-900 hover:bg-neutral-100 disabled:opacity-50"
+        className="btn btn-secondary py-1.5"
       >
         {pending ? 'Saving…' : `Make ${LABELS[target].toLowerCase()}`}
       </button>
       {message && (
-        <span role="alert" className="text-xs text-red-700">
+        <span role="alert" className="text-xs text-danger">
           {message}
         </span>
       )}

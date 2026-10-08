@@ -2,8 +2,9 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { prisma } from '@/lib/db';
 import { formatMoney } from '@/lib/money';
-import { STATUS_LABELS } from '@/lib/order-state';
+import { STATUS_LABELS, STATUS_TONES } from '@/lib/order-state';
 import { RoleControl } from '@/components/role-control';
+import { AdminStat } from '@/components/admin-stat';
 import { DeleteControl } from '@/components/delete-control';
 
 export const dynamic = 'force-dynamic';
@@ -43,17 +44,17 @@ export default async function AdminCustomerPage(props: { params: Promise<{ id: s
       </div>
 
       <section className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-        <Stat label="Role" value={user.role === 'ADMIN' ? 'Admin' : 'Customer'} />
-        <Stat label="Orders" value={String(user.orders.length)} />
-        <Stat label="Confirmed spend" value={formatMoney(spend)} hint={`${paid.length} paid`} />
-        <Stat
+        <AdminStat label="Role" value={user.role === 'ADMIN' ? 'Admin' : 'Customer'} />
+        <AdminStat label="Orders" value={String(user.orders.length)} />
+        <AdminStat label="Confirmed spend" value={formatMoney(spend)} hint={`${paid.length} paid`} />
+        <AdminStat
           label="Open"
           value={String(user.orders.filter((order) => order.status === 'PENDING').length)}
           hint="reserved stock"
         />
       </section>
 
-      <section className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-neutral-200 p-5">
+      <section className="card flex flex-wrap items-center justify-between gap-3 p-5">
         <div>
           <h2 className="text-sm font-semibold">Access</h2>
           <p className="mt-1 max-w-md text-sm text-neutral-600">
@@ -66,27 +67,35 @@ export default async function AdminCustomerPage(props: { params: Promise<{ id: s
 
       <section>
         <h2 className="text-sm font-semibold">Order history</h2>
-        <ul className="mt-3 divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
+        <ul className="card mt-3 divide-y divide-line text-sm">
           {user.orders.map((order) => (
-            <li key={order.id} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
-              <Link href={`/admin/orders/${order.id}`} className="font-medium underline-offset-4 hover:underline">
+            <li
+              key={order.id}
+              className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 px-5 py-3"
+            >
+              <Link
+                href={`/admin/orders/${order.id}`}
+                className="font-medium tabular-nums underline-offset-4 hover:underline"
+              >
                 {order.reference}
               </Link>
               <span className="text-xs text-neutral-500">
                 {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(order.createdAt)}
               </span>
-              <span className="text-xs text-neutral-600">
+              <span className="min-w-0 flex-1 truncate text-xs text-neutral-600">
                 {order.items.map((item) => `${item.quantity}× ${item.title}`).join(', ') || 'no lines'}
               </span>
               <span className="tabular-nums">{formatMoney(order.totalCents)}</span>
-              <span className="text-xs text-neutral-600">{STATUS_LABELS[order.status]}</span>
+              <span className={`pill ${STATUS_TONES[order.status]}`}>{STATUS_LABELS[order.status]}</span>
             </li>
           ))}
-          {user.orders.length === 0 && <li className="py-4 text-sm text-neutral-500">This account has never ordered.</li>}
+          {user.orders.length === 0 && (
+            <li className="px-5 py-6 text-sm text-neutral-500">This account has never ordered.</li>
+          )}
         </ul>
       </section>
 
-      <section className="rounded-lg border border-neutral-200 p-5">
+      <section className="card p-5">
         <h2 className="text-sm font-semibold">Delete this account</h2>
         <p className="mt-1 max-w-xl text-sm text-neutral-600">
           {user.orders.length > 0
@@ -102,16 +111,6 @@ export default async function AdminCustomerPage(props: { params: Promise<{ id: s
           />
         </div>
       </section>
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-neutral-200 p-4">
-      <p className="text-xs text-neutral-500">{label}</p>
-      <p className="mt-1 text-lg font-semibold tabular-nums tracking-tight">{value}</p>
-      {hint && <p className="text-xs text-neutral-500">{hint}</p>}
     </div>
   );
 }

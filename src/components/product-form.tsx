@@ -67,7 +67,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
           minLength={3}
           maxLength={120}
           placeholder="Wireless Headphones"
-          className={inputClass}
+          className="field"
         />
       </Field>
 
@@ -77,7 +77,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
           defaultValue={draft.handle}
           maxLength={80}
           placeholder="wireless-headphones"
-          className={`${inputClass} font-mono`}
+          className="field font-mono"
         />
       </Field>
 
@@ -90,7 +90,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
           maxLength={60}
           list="admin-categories"
           placeholder="Audio"
-          className={inputClass}
+          className="field"
         />
         <datalist id="admin-categories">
           {categories.map((name) => (
@@ -106,7 +106,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
           required
           maxLength={200}
           placeholder="/products/headphones.svg"
-          className={`${inputClass} font-mono`}
+          className="field font-mono"
         />
       </Field>
 
@@ -117,7 +117,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
           required
           minLength={10}
           rows={5}
-          className={`${inputClass} leading-relaxed`}
+          className="field leading-relaxed"
         />
       </Field>
 
@@ -132,11 +132,7 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
       </label>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="submit"
-          disabled={pending}
-          className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50"
-        >
+        <button type="submit" disabled={pending} className="btn btn-primary">
           {pending ? 'Saving…' : isEdit ? 'Save changes' : 'Create product'}
         </button>
         {message && (
@@ -149,12 +145,9 @@ export function ProductForm({ draft, categories }: { draft: ProductDraft; catego
   );
 }
 
-const inputClass =
-  'w-full rounded-md border border-neutral-300 px-3 py-2 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none';
-
 function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="flex flex-col gap-1">
       <span className="text-sm font-medium text-neutral-900">{label}</span>
       {children}
       {hint && <span className="text-xs text-neutral-500">{hint}</span>}

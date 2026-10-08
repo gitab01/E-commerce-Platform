@@ -48,21 +48,22 @@ export default async function CheckoutPage() {
   const providers = availableProviders().map((id) => ({ id, ...PROVIDER_COPY[id] }));
 
   return (
-    <div className="container-page py-10">
-      <h1 className="text-2xl font-semibold tracking-tight">Checkout</h1>
-      <p className="mt-1 text-sm text-neutral-600">
+    <div className="container-page py-10 sm:py-12">
+      <h1 className="text-2xl font-semibold tracking-tight text-ink sm:text-3xl">Checkout</h1>
+      <p className="mt-1.5 text-sm text-neutral-600">
         Guest checkout — an account is offered after payment, when there is a reason to come back.
       </p>
 
-      <div className="mt-6 grid grid-cols-1 gap-8 lg:grid-cols-[1fr_20rem]">
+      <div className="mt-7 grid grid-cols-1 gap-6 lg:grid-cols-[1fr_20rem] lg:gap-8">
         {providers.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-neutral-300 p-6">
-            <h2 className="text-sm font-semibold text-neutral-950">No payment gateway configured</h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              Add CHAPA_SECRET_KEY or STRIPE_SECRET_KEY to the environment, or set DEMO_PAYMENTS=true to walk through
-              the flow without credentials.
+          <div className="card p-6">
+            <span className="pill pill-danger">Checkout closed</span>
+            <h2 className="mt-3 text-sm font-semibold text-ink">No payment gateway configured</h2>
+            <p className="mt-2 text-sm leading-6 text-neutral-600">
+              Add CHAPA_SECRET_KEY or STRIPE_SECRET_KEY to the environment, or set DEMO_PAYMENTS=true together with a
+              PAYMENT_PROVIDERS list that includes DEMO, to walk through the flow without credentials.
             </p>
-            <Link href="/products" className="mt-4 inline-block text-sm underline-offset-4 hover:underline">
+            <Link href="/products" className="btn btn-secondary mt-5">
               Back to the catalogue
             </Link>
           </div>
@@ -73,19 +74,19 @@ export default async function CheckoutPage() {
           />
         )}
 
-        <aside className="h-fit rounded-lg border border-neutral-200 p-5">
-          <h2 className="text-sm font-semibold">Order total</h2>
-          <ul className="mt-3 space-y-2 text-sm">
+        <aside className="card h-fit p-5">
+          <h2 className="text-sm font-semibold text-ink">Order total</h2>
+          <ul className="mt-4 space-y-2.5 text-sm">
             {lines.map((line) => (
               <li key={line.variantId} className="flex justify-between gap-3">
                 <span className="min-w-0 truncate text-neutral-700">
                   {line.quantity} × {line.title} <span className="text-neutral-400">({line.variantName})</span>
                 </span>
-                <span className="tabular-nums">{formatMoney(line.unitPriceCents * line.quantity)}</span>
+                <span className="shrink-0 tabular-nums">{formatMoney(line.unitPriceCents * line.quantity)}</span>
               </li>
             ))}
           </ul>
-          <dl className="mt-4 space-y-2 border-t border-neutral-200 pt-4 text-sm">
+          <dl className="mt-4 space-y-2 border-t border-line pt-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-neutral-600">Subtotal</dt>
               <dd className="tabular-nums">{formatMoney(totals.subtotalCents)}</dd>
@@ -94,9 +95,9 @@ export default async function CheckoutPage() {
               <dt className="text-neutral-600">Delivery</dt>
               <dd className="tabular-nums">{formatMoney(totals.shippingCents)}</dd>
             </div>
-            <div className="flex justify-between font-medium">
-              <dt>Total</dt>
-              <dd className="tabular-nums">{formatMoney(totals.totalCents)}</dd>
+            <div className="flex items-baseline justify-between pt-1">
+              <dt className="text-sm font-medium text-ink">Total</dt>
+              <dd className="text-lg font-semibold tabular-nums tracking-tight text-ink">{formatMoney(totals.totalCents)}</dd>
             </div>
           </dl>
           <p className="mt-4 text-xs leading-5 text-neutral-500">

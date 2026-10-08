@@ -46,7 +46,7 @@ export function AdminStatusControl({
               event.target.value = '';
             });
           }}
-          className="rounded-md border border-neutral-300 px-2 py-1 text-sm disabled:opacity-50"
+          className="rounded-md border border-neutral-300 bg-white px-2 py-1 text-sm disabled:opacity-50"
         >
           <option value="">Move to…</option>
           {options.map((option) => (
@@ -57,7 +57,7 @@ export function AdminStatusControl({
         </select>
         {pending && <span className="text-xs text-neutral-500">Saving…</span>}
       </div>
-      {error && <p role="alert" className="text-xs text-red-700">{error}</p>}
+      {error && <p role="alert" className="text-xs text-danger">{error}</p>}
       {current === 'PENDING' && <span className="text-xs text-neutral-500">awaiting webhook</span>}
     </div>
   );

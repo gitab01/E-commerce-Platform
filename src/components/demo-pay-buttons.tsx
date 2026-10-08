@@ -12,7 +12,7 @@ export function DemoPayButtons({ reference }: { reference: string }) {
         type="button"
         disabled={pending}
         onClick={() => startTransition(() => confirmDemoPayment(reference, 'paid'))}
-        className="rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
+        className="btn btn-primary py-2.5"
       >
         {pending ? 'Confirming…' : 'Pay now'}
       </button>
@@ -20,7 +20,7 @@ export function DemoPayButtons({ reference }: { reference: string }) {
         type="button"
         disabled={pending}
         onClick={() => startTransition(() => confirmDemoPayment(reference, 'failed'))}
-        className="rounded-md border border-neutral-300 px-4 py-2.5 text-sm font-medium text-neutral-900 hover:bg-neutral-100 disabled:opacity-60"
+        className="btn btn-secondary py-2.5"
       >
         Simulate failure
       </button>

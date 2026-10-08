@@ -1,9 +1,14 @@
 import Link from 'next/link';
 import { publishedProducts } from '@/lib/catalog';
 import { ProductCard } from '@/components/product-card';
-import { formatMoney } from '@/lib/money';
 
 export const revalidate = 60;
+
+const PROMISES = [
+  { title: 'Reserved for 30 minutes', body: 'Starting checkout holds the units. An unfinished payment gives them back.' },
+  { title: 'Totals read from the database', body: 'The price you pay is looked up inside the checkout transaction, not sent by the browser.' },
+  { title: 'Paid only when the bank agrees', body: 'An order turns paid on a signature-verified gateway webhook, never on a redirect.' },
+];
 
 export default async function HomePage() {
   const products = await publishedProducts();
@@ -14,56 +19,53 @@ export default async function HomePage() {
   );
 
   return (
-    <div className="container-page py-10 sm:py-14">
-      <section className="border-b border-neutral-200 pb-10">
-        <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Inventory available now</p>
-        <h1 className="mt-3 max-w-2xl text-3xl font-semibold tracking-tight text-neutral-950 sm:text-4xl">
-          Buy it before the last unit goes — checkout reserves stock the moment you commit.
+    <div className="container-page pt-12 sm:pt-16">
+      <section>
+        <p className="eyebrow">In stock and ready to ship</p>
+        <h1 className="mt-4 max-w-3xl text-[2rem] font-semibold leading-[1.15] tracking-tight text-ink sm:text-5xl">
+          Buy it before the last unit goes.
         </h1>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-neutral-600">
-          Prices are re-read from the database inside the checkout transaction, and an order only becomes paid when a
-          signature-verified gateway webhook says so. {inStock.toLocaleString()} units are sellable right now.
+        <p className="mt-4 max-w-2xl text-[0.9375rem] leading-7 text-neutral-600">
+          {inStock.toLocaleString()} units are sellable right now across {products.length} products. What the page
+          shows is what the shelf holds, and the total is checked against the database before any payment starts.
         </p>
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link
-            href="/products"
-            className="rounded-md bg-neutral-900 px-4 py-2 text-sm font-medium text-white hover:bg-neutral-800"
-          >
+        <div className="mt-7 flex flex-wrap gap-3">
+          <Link href="/products" className="btn btn-primary px-5">
             Browse products
           </Link>
-          <Link
-            href="/cart"
-            className="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-900 hover:bg-neutral-100"
-          >
+          <Link href="/cart" className="btn btn-secondary">
             View cart
           </Link>
         </div>
       </section>
 
-      <section className="mt-10">
-        <div className="flex items-baseline justify-between">
-          <h2 className="text-lg font-semibold tracking-tight">Latest arrivals</h2>
-          <Link href="/products" className="text-sm text-neutral-600 underline-offset-4 hover:underline">
+      <section className="mt-12 grid gap-px overflow-hidden rounded-lg border border-line bg-line sm:grid-cols-3">
+        {PROMISES.map((promise) => (
+          <div key={promise.title} className="bg-white p-5">
+            <h2 className="text-sm font-semibold text-ink">{promise.title}</h2>
+            <p className="mt-1.5 text-[0.8125rem] leading-6 text-neutral-600">{promise.body}</p>
+          </div>
+        ))}
+      </section>
+
+      <section className="mt-14">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-xl font-semibold tracking-tight text-ink">Latest arrivals</h2>
+          <Link href="/products" className="text-sm text-neutral-600 underline-offset-4 hover:text-ink hover:underline">
             All {products.length} products
           </Link>
         </div>
-        <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {featured.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
         </div>
         {featured.length === 0 && (
-          <p className="mt-6 rounded-md border border-dashed border-neutral-300 p-8 text-center text-sm text-neutral-500">
+          <p className="mt-6 rounded-lg border border-dashed border-neutral-300 p-10 text-center text-sm text-neutral-500">
             No catalogue yet. Run <code className="font-mono">npm run db:seed</code> to load the sample products.
           </p>
         )}
       </section>
-
-      {featured[0] && (
-        <p className="mt-8 text-xs text-neutral-500">
-          Lowest price in the catalogue: {formatMoney(Math.min(...featured.flatMap((p) => p.variants.map((v) => v.priceCents))))}
-        </p>
-      )}
     </div>
   );
 }

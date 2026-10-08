@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
+import { AdminNav } from '@/components/admin-nav';
 import { currentUser } from '@/lib/auth';
 
 export const dynamic = 'force-dynamic';
@@ -24,27 +25,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
 
   return (
     <div className="container-page py-8">
-      <nav className="flex flex-wrap items-center gap-1 border-b border-neutral-200 pb-3 text-sm">
-        <Link href="/admin" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Overview
-        </Link>
-        <Link href="/admin/products" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Products
-        </Link>
-        <Link href="/admin/orders" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Orders
-        </Link>
-        <Link href="/admin/inventory" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Inventory
-        </Link>
-        <Link href="/admin/assets" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Images
-        </Link>
-        <Link href="/admin/customers" className="rounded-md px-2.5 py-1.5 text-neutral-700 hover:bg-neutral-100">
-          Customers
-        </Link>
-        <span className="ml-auto text-xs text-neutral-500">{user.email}</span>
-      </nav>
+      <AdminNav email={user.email} />
       <div className="mt-8">{children}</div>
     </div>
   );

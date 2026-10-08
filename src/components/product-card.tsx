@@ -21,27 +21,24 @@ export function ProductCard({ product }: { product: Product }) {
   return (
     <Link
       href={`/products/${product.slug}`}
-      className="group flex flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white hover:border-neutral-400"
+      className="card group flex flex-col overflow-hidden transition-colors hover:border-neutral-400"
     >
       <div className="relative aspect-4/3 w-full bg-neutral-50">
         <Image src={product.image} alt={product.title} fill sizes="(max-width: 768px) 100vw, 33vw" className="object-contain p-6" />
       </div>
-      <div className="flex flex-1 flex-col gap-1 border-t border-neutral-200 p-4">
-        <p className="text-xs uppercase tracking-wide text-neutral-500">{product.category.name}</p>
-        <h3 className="text-sm font-semibold text-neutral-950">{product.title}</h3>
-        <div className="mt-auto flex items-center justify-between pt-3">
-          <span className="text-sm tabular-nums text-neutral-900">
+      <div className="flex flex-1 flex-col p-4">
+        <p className="eyebrow">{product.category.name}</p>
+        <h3 className="mt-1 text-[0.9375rem] font-semibold leading-6 text-ink">{product.title}</h3>
+        <div className="mt-auto flex items-end justify-between gap-3 pt-4">
+          <span className="text-base font-semibold tabular-nums tracking-tight text-ink">
             {lead ? formatMoney(lead.priceCents) : '—'}
           </span>
           <span
-            className={`rounded-full px-2 py-0.5 text-xs font-medium ${
-              stock === 0
-                ? 'bg-neutral-900 text-white'
-                : low
-                  ? 'bg-neutral-100 text-neutral-800'
-                  : 'text-neutral-500'
+            className={`pill ${
+              stock === 0 ? 'pill-danger' : low ? 'pill-neutral' : 'text-neutral-500'
             }`}
           >
+            {stock > 0 && <span className="dot" aria-hidden="true" />}
             {stock === 0 ? 'Sold out' : low ? `Only ${stock} left` : `${stock} in stock`}
           </span>
         </div>

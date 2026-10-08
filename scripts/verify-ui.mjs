@@ -169,7 +169,7 @@ async function overflow() {
 /** The badge in this order's own row — the option labels say "Shipped" even when the row is Paid. */
 const rowBadge = (reference, label) => `(() => {
   const row = [...document.querySelectorAll('li')].find((li) => (li.innerText || '').includes(${JSON.stringify(reference)}));
-  const badge = row && row.querySelector('span.rounded-full');
+  const badge = row && row.querySelector('span.pill');
   return !!badge && badge.textContent.trim() === ${JSON.stringify(label)};
 })()`;
 

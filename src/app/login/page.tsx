@@ -16,20 +16,24 @@ export default async function LoginPage({
   if (user) redirect(next ?? '/account');
 
   return (
-    <div className="container-page max-w-sm py-14">
-      <h1 className="text-2xl font-semibold tracking-tight">Sign in</h1>
-      <p className="mt-1 text-sm text-neutral-600">Optional for buying; useful for order history and reordering.</p>
-      <div className="mt-6">
-        <Suspense fallback={null}>
-          <AuthForm mode="login" />
-        </Suspense>
+    <div className="container-page flex justify-center py-14 sm:py-20">
+      <div className="card w-full max-w-sm p-6 sm:p-8">
+        <h1 className="text-xl font-semibold tracking-tight text-ink">Sign in</h1>
+        <p className="mt-1.5 text-sm text-neutral-600">
+          Optional for buying — useful for order history and reordering.
+        </p>
+        <div className="mt-6">
+          <Suspense fallback={null}>
+            <AuthForm mode="login" />
+          </Suspense>
+        </div>
+        <p className="mt-6 text-sm text-neutral-600">
+          No account yet?{' '}
+          <Link href="/register" className="font-medium text-ink underline-offset-4 hover:underline">
+            Create one
+          </Link>
+        </p>
       </div>
-      <p className="mt-6 text-sm text-neutral-600">
-        No account yet?{' '}
-        <Link href="/register" className="underline-offset-4 hover:underline">
-          Create one
-        </Link>
-      </p>
     </div>
   );
 }

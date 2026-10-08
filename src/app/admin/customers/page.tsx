@@ -44,25 +44,28 @@ export default async function AdminCustomersPage(props: { searchParams: Promise<
         </p>
       </div>
 
-      <form className="flex flex-wrap items-center gap-2" action="/admin/customers">
+      <form
+        className="scroll-x -mx-4 flex flex-nowrap items-center gap-2 px-4 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+        action="/admin/customers"
+      >
         <input
           name="q"
           defaultValue={term}
           placeholder="Search name or email"
-          className="w-full max-w-xs rounded-md border border-neutral-300 px-3 py-2 text-sm placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none"
+          className="w-full max-w-xs shrink-0 rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm placeholder:text-neutral-400"
         />
-        <button type="submit" className="rounded-md border border-neutral-300 px-3 py-2 text-sm hover:bg-neutral-100">
+        <button type="submit" className="btn btn-secondary shrink-0">
           Search
         </button>
         {term && (
-          <Link href="/admin/customers" className="text-xs text-neutral-500 underline-offset-4 hover:underline">
+          <Link href="/admin/customers" className="shrink-0 text-xs text-neutral-500 underline-offset-4 hover:underline">
             Reset
           </Link>
         )}
       </form>
 
-      <section className="rounded-lg border border-dashed border-neutral-300 p-4">
-        <h2 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Add a store admin</h2>
+      <section className="card p-5">
+        <h2 className="eyebrow">Add a store admin</h2>
         <p className="mt-1 text-xs text-neutral-600">
           Admins can change the catalogue, stock and every order, so only hand this out to people you trust.
         </p>
@@ -71,15 +74,21 @@ export default async function AdminCustomersPage(props: { searchParams: Promise<
         </div>
       </section>
 
-      <ul className="divide-y divide-neutral-200 border-y border-neutral-200">
+      <ul className="card divide-y divide-line">
         {users.map((user) => {
           const paid = user.orders.filter((order) => PAID_STATUSES.includes(order.status));
           const spend = paid.reduce((sum, order) => sum + order.totalCents, 0);
           const last = user.orders[0];
           return (
-            <li key={user.id} className="grid grid-cols-2 gap-x-4 gap-y-1 py-3 sm:grid-cols-[1fr_auto_auto_auto] sm:items-center">
-              <div className="col-span-2 min-w-0 sm:col-span-1">
-                <Link href={`/admin/customers/${user.id}`} className="block truncate text-sm font-medium underline-offset-4 hover:underline">
+            <li
+              key={user.id}
+              className="grid grid-cols-3 items-center gap-x-3 gap-y-1 px-5 py-3.5 sm:grid-cols-[1fr_auto_auto_auto]"
+            >
+              <div className="col-span-3 min-w-0 sm:col-span-1">
+                <Link
+                  href={`/admin/customers/${user.id}`}
+                  className="block truncate text-sm font-medium underline-offset-4 hover:underline"
+                >
                   {user.name}
                 </Link>
                 <p className="truncate text-xs text-neutral-500">
@@ -88,21 +97,19 @@ export default async function AdminCustomersPage(props: { searchParams: Promise<
                   {last && ` · last order ${new Intl.DateTimeFormat('en-GB', { dateStyle: 'short' }).format(last.createdAt)}`}
                 </p>
               </div>
-              <span className="text-sm tabular-nums text-neutral-600">
+              <span className="justify-self-end text-sm tabular-nums text-neutral-600">
                 {user.orders.length} order{user.orders.length === 1 ? '' : 's'}
               </span>
-              <span className="text-sm tabular-nums">{formatMoney(spend)}</span>
-              <span
-                className={`w-fit rounded-full px-2 py-0.5 text-xs ${
-                  user.role === 'ADMIN' ? 'bg-neutral-900 text-white' : 'bg-neutral-100 text-neutral-700'
-                }`}
-              >
-                {user.role.toLowerCase()}
-              </span>
+              <span className="justify-self-end text-sm tabular-nums">{formatMoney(spend)}</span>
+              <div className="flex justify-end">
+                <span className={`pill ${user.role === 'ADMIN' ? 'pill-dark' : 'pill-neutral'}`}>
+                  {user.role.toLowerCase()}
+                </span>
+              </div>
             </li>
           );
         })}
-        {users.length === 0 && <li className="py-6 text-sm text-neutral-500">No accounts match that search.</li>}
+        {users.length === 0 && <li className="px-5 py-8 text-sm text-neutral-500">No accounts match that search.</li>}
       </ul>
     </div>
   );

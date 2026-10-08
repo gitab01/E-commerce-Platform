@@ -42,7 +42,7 @@ export function VariantForm({ productId, variant }: { productId: string; variant
       }}
     >
       <label className="col-span-1 flex flex-col gap-1">
-        <span className="text-xs text-neutral-500">SKU</span>
+        <span className="label">SKU</span>
         <input
           name="sku"
           defaultValue={variant?.sku ?? ''}
@@ -50,22 +50,22 @@ export function VariantForm({ productId, variant }: { productId: string; variant
           minLength={2}
           maxLength={40}
           placeholder="HPH-BLK-M"
-          className={`${field} font-mono uppercase`}
+          className="field font-mono uppercase"
         />
       </label>
       <label className="col-span-2 flex flex-col gap-1 sm:col-span-1">
-        <span className="text-xs text-neutral-500">Option name</span>
+        <span className="label">Option name</span>
         <input
           name="name"
           defaultValue={variant?.name ?? ''}
           required
           maxLength={60}
           placeholder="Black / Medium"
-          className={field}
+          className="field"
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-500">Price (Birr)</span>
+        <span className="label">Price (Birr)</span>
         <input
           name="price"
           inputMode="decimal"
@@ -73,11 +73,11 @@ export function VariantForm({ productId, variant }: { productId: string; variant
           required
           maxLength={16}
           placeholder="1200"
-          className={`${field} tabular-nums`}
+          className="field tabular-nums"
         />
       </label>
       <label className="flex flex-col gap-1">
-        <span className="text-xs text-neutral-500">Stock</span>
+        <span className="label">Stock</span>
         <input
           name="stock"
           inputMode="numeric"
@@ -85,14 +85,10 @@ export function VariantForm({ productId, variant }: { productId: string; variant
           required
           maxLength={7}
           placeholder="12"
-          className={`${field} tabular-nums`}
+          className="field tabular-nums"
         />
       </label>
-      <button
-        type="submit"
-        disabled={pending}
-        className="h-[34px] rounded-md border border-neutral-300 px-3 text-sm text-neutral-900 hover:bg-neutral-100 disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="btn btn-secondary">
         {pending ? 'Saving…' : isEdit ? 'Save' : 'Add variant'}
       </button>
       {message && (
@@ -103,6 +99,3 @@ export function VariantForm({ productId, variant }: { productId: string; variant
     </form>
   );
 }
-
-const field =
-  'w-full rounded-md border border-neutral-300 px-2 py-1.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:border-neutral-900 focus:outline-none';

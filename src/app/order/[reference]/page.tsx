@@ -3,7 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/db';
 import { formatMoney } from '@/lib/money';
 import { currentUser } from '@/lib/auth';
-import { STATUS_LABELS } from '@/lib/order-state';
+import { STATUS_LABELS, STATUS_TONES } from '@/lib/order-state';
 import { StatusTimeline, type TimelineStep } from '@/components/status-timeline';
 import { ResumePayment } from '@/components/resume-payment';
 import { OfferAccount } from '@/components/offer-account';
@@ -46,24 +46,24 @@ export default async function OrderPage({
 
   return (
     <div className="container-page max-w-3xl py-10">
-      <p className="text-xs font-medium uppercase tracking-wide text-neutral-500">Order</p>
-      <h1 className="mt-2 flex flex-wrap items-baseline gap-3 text-2xl font-semibold tracking-tight">
-        {order.reference}
-        <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-medium text-neutral-700">
-          {STATUS_LABELS[order.status]}
-        </span>
+      <p className="eyebrow">Order</p>
+      <h1 className="mt-2 flex flex-wrap items-center gap-3 text-2xl font-semibold tracking-tight">
+        <span className="tabular-nums">{order.reference}</span>
+        <span className={`pill ${STATUS_TONES[order.status]}`}>{STATUS_LABELS[order.status]}</span>
       </h1>
       <p className="mt-1 text-sm text-neutral-600">
         Placed {new Intl.DateTimeFormat('en-GB', { dateStyle: 'medium' }).format(order.reservedAt)} by {order.email}
       </p>
 
       {(query.paid || order.status !== 'PENDING') && order.status === 'PAID' && (
-        <p className="mt-4 rounded-md bg-neutral-100 p-3 text-sm text-neutral-800">
+        <p className="card mt-5 flex flex-wrap items-center gap-3 p-4 text-sm text-neutral-800">
+          <span className="pill pill-success">Paid</span>
           Payment confirmed. You will get another update when this order ships.
         </p>
       )}
       {query.cancelled && order.status === 'PENDING' && (
-        <p className="mt-4 rounded-md border border-neutral-300 p-3 text-sm text-neutral-800">
+        <p className="card mt-5 flex flex-wrap items-center gap-3 p-4 text-sm text-neutral-800">
+          <span className="pill pill-outline">Not charged</span>
           You left the payment page. Stock is still reserved until{' '}
           {new Intl.DateTimeFormat('en-GB', { timeStyle: 'short' }).format(order.expiresAt)} — after that it goes back
           on the shelf automatically.
@@ -91,18 +91,18 @@ export default async function OrderPage({
       )}
 
       <section className="mt-10 grid grid-cols-1 gap-8 sm:grid-cols-2">
-        <div>
-          <h2 className="text-sm font-semibold">Progress</h2>
-          <div className="mt-4">
+        <div className="card">
+          <h2 className="border-b border-line px-5 py-3 text-sm font-semibold">Progress</h2>
+          <div className="px-5 py-4">
             <StatusTimeline steps={steps} />
           </div>
         </div>
 
-        <div>
-          <h2 className="text-sm font-semibold">Items</h2>
-          <ul className="mt-3 divide-y divide-neutral-200 border-y border-neutral-200 text-sm">
+        <div className="card">
+          <h2 className="border-b border-line px-5 py-3 text-sm font-semibold">Items</h2>
+          <ul className="divide-y divide-line text-sm">
             {order.items.map((item) => (
-              <li key={item.id} className="flex justify-between gap-4 py-2">
+              <li key={item.id} className="flex justify-between gap-4 px-5 py-3">
                 <span className="min-w-0">
                   <span className="block truncate text-neutral-900">{item.title}</span>
                   <span className="text-xs text-neutral-500">
@@ -114,7 +114,7 @@ export default async function OrderPage({
               </li>
             ))}
           </ul>
-          <dl className="mt-3 space-y-1.5 text-sm">
+          <dl className="space-y-1.5 border-t border-line px-5 py-4 text-sm">
             <div className="flex justify-between">
               <dt className="text-neutral-600">Subtotal</dt>
               <dd className="tabular-nums">{formatMoney(order.subtotalCents)}</dd>
@@ -123,12 +123,12 @@ export default async function OrderPage({
               <dt className="text-neutral-600">Delivery</dt>
               <dd className="tabular-nums">{formatMoney(order.shippingCents)}</dd>
             </div>
-            <div className="flex justify-between font-medium">
+            <div className="flex justify-between font-semibold">
               <dt>Total</dt>
               <dd className="tabular-nums">{formatMoney(order.totalCents)}</dd>
             </div>
           </dl>
-          <p className="mt-3 text-xs text-neutral-500">
+          <p className="border-t border-line px-5 py-3 text-xs text-neutral-500">
             Paid through {order.provider.toLowerCase()} · reference {order.providerSessionId ?? order.reference}
           </p>
         </div>
@@ -137,12 +137,12 @@ export default async function OrderPage({
       {order.status === 'PAID' && !user && <OfferAccount email={order.email} />}
 
       {order.events.length > 0 && (
-        <section className="mt-12 border-t border-neutral-200 pt-6">
-          <h2 className="text-sm font-semibold">History</h2>
-          <ul className="mt-3 space-y-1 text-xs text-neutral-600">
+        <section className="mt-10">
+          <h2 className="eyebrow">History</h2>
+          <ul className="card mt-3 divide-y divide-line px-5 text-xs text-neutral-600">
             {order.events.map((event) => (
-              <li key={event.id} className="flex gap-3">
-                <span className="tabular-nums text-neutral-400">
+              <li key={event.id} className="flex gap-3 py-2.5">
+                <span className="shrink-0 tabular-nums text-neutral-400">
                   {new Intl.DateTimeFormat('en-GB', { dateStyle: 'short', timeStyle: 'short' }).format(event.createdAt)}
                 </span>
                 <span>

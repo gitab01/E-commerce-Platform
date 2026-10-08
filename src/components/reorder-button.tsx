@@ -20,7 +20,7 @@ export function ReorderButton({ reference }: { reference: string }) {
           if (result.added > 0) router.push('/cart');
         })
       }
-      className="rounded-md border border-neutral-300 px-2.5 py-1 text-xs text-neutral-800 hover:bg-neutral-100 disabled:opacity-50"
+      className="btn btn-secondary btn-sm"
     >
       {pending ? 'Adding…' : 'Buy again'}
     </button>

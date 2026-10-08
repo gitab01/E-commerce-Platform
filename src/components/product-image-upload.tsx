@@ -42,11 +42,7 @@ export function ProductImageUpload({ productId }: { productId: string }) {
         accept="image/png,image/jpeg,image/webp"
         className="w-full max-w-[13rem] text-xs text-neutral-600 file:mr-2 file:rounded-md file:border-0 file:bg-neutral-100 file:px-2.5 file:py-1 file:text-xs"
       />
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md border border-neutral-300 px-3 py-1 text-sm text-neutral-900 hover:bg-neutral-100 disabled:opacity-50"
-      >
+      <button type="submit" disabled={pending} className="btn btn-secondary py-1">
         {pending ? 'Uploading…' : 'Upload'}
       </button>
       {message && <p role="status" className="w-full text-xs text-neutral-600 sm:w-auto">{message}</p>}

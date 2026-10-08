@@ -68,9 +68,9 @@ export function AddToCart({ variants }: { variants: VariantOption[] }) {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-5">
       <fieldset>
-        <legend className="text-xs font-medium uppercase tracking-wide text-neutral-500">Option</legend>
+        <legend className="eyebrow">Option</legend>
         <div className="mt-2 flex flex-wrap gap-2">
           {variants.map((variant) => (
             <button
@@ -79,12 +79,12 @@ export function AddToCart({ variants }: { variants: VariantOption[] }) {
               onClick={() => pick(variant.id)}
               disabled={variant.stock === 0}
               aria-pressed={variant.id === variantId}
-              className={`rounded-md border px-3 py-1.5 text-sm ${
+              className={`btn border ${
                 variant.stock === 0
-                  ? 'cursor-not-allowed border-neutral-200 text-neutral-300 line-through'
+                  ? 'cursor-not-allowed border-line text-neutral-300 line-through'
                   : variant.id === variantId
-                    ? 'border-neutral-900 bg-neutral-900 text-white'
-                    : 'border-neutral-300 text-neutral-800 hover:border-neutral-500'
+                    ? 'border-ink font-semibold text-ink'
+                    : 'border-neutral-300 text-neutral-800 hover:border-neutral-400'
               }`}
             >
               {variant.name}
@@ -95,14 +95,14 @@ export function AddToCart({ variants }: { variants: VariantOption[] }) {
 
       <div className="flex flex-wrap items-end gap-4">
         <div>
-          <label htmlFor="qty" className="text-xs font-medium uppercase tracking-wide text-neutral-500">
+          <label htmlFor="qty" className="label block">
             Quantity
           </label>
           <div className="mt-2 flex items-center gap-2">
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-              className="h-9 w-9 rounded-md border border-neutral-300 text-neutral-800 hover:bg-neutral-100"
+              className="btn h-9 w-9 border border-neutral-300 px-0 text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50"
               aria-label="Decrease quantity"
             >
               −
@@ -122,7 +122,7 @@ export function AddToCart({ variants }: { variants: VariantOption[] }) {
             <button
               type="button"
               onClick={() => setQuantity((q) => Math.min(max, q + 1))}
-              className="h-9 w-9 rounded-md border border-neutral-300 text-neutral-800 hover:bg-neutral-100"
+              className="btn h-9 w-9 border border-neutral-300 px-0 text-neutral-800 hover:border-neutral-400 hover:bg-neutral-50"
               aria-label="Increase quantity"
             >
               +
@@ -133,7 +133,7 @@ export function AddToCart({ variants }: { variants: VariantOption[] }) {
           type="button"
           onClick={submit}
           disabled={pending || !selected || quantity > max}
-          className="h-9 flex-1 rounded-md bg-neutral-900 px-4 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-50 sm:flex-none"
+          className="btn btn-primary h-9 flex-1 sm:flex-none"
         >
           {pending ? 'Adding…' : `Add to cart · ${selected ? formatMoney(selected.priceCents * quantity) : ''}`}
         </button>

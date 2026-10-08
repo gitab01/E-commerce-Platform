@@ -1,12 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { cartStore, CartBadge } from './cart-badge';
 
 type Nav = { count: number; signedIn: boolean; admin: boolean };
-
-const link = 'rounded-md px-2 py-1 text-neutral-700 hover:bg-neutral-100';
 
 /**
  * Session-dependent header state arrives after hydration so that no page in the
@@ -14,6 +13,7 @@ const link = 'rounded-md px-2 py-1 text-neutral-700 hover:bg-neutral-100';
  * every product page to be server-rendered on demand.
  */
 export function SiteNav() {
+  const pathname = usePathname();
   const [nav, setNav] = useState<Nav | null>(null);
 
   useEffect(() => {
@@ -31,17 +31,29 @@ export function SiteNav() {
     };
   }, []);
 
+  const tab = (href: string) =>
+    `rounded-md px-2.5 py-1.5 text-sm transition-colors ${
+      pathname === href || (href !== '/' && pathname.startsWith(`${href}/`))
+        ? 'bg-neutral-100 font-medium text-ink'
+        : 'text-neutral-600 hover:bg-neutral-50 hover:text-ink'
+    }`;
+
+  const accountHref = nav?.signedIn ? '/account' : '/login';
+
   return (
-    <div className="flex items-center gap-1 text-sm">
+    <nav className="flex min-w-0 items-center gap-0.5">
+      <Link href="/products" className={tab('/products')}>
+        Products
+      </Link>
       {nav?.admin && (
-        <Link href="/admin" className={link}>
+        <Link href="/admin" className={tab('/admin')}>
           Admin
         </Link>
       )}
-      <Link href={nav?.signedIn ? '/account' : '/login'} className={link}>
+      <Link href={accountHref} className={tab(accountHref)}>
         {nav?.signedIn ? 'Account' : 'Sign in'}
       </Link>
       <CartBadge />
-    </div>
+    </nav>
   );
 }

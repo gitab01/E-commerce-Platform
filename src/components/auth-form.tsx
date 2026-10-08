@@ -41,27 +41,16 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
       }}
     >
       {mode === 'register' && (
-        <label className="text-xs text-neutral-600">
+        <label className="label">
           Name
-          <input
-            name="name"
-            required
-            minLength={2}
-            className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-          />
+          <input name="name" required minLength={2} autoComplete="name" className="field" />
         </label>
       )}
-      <label className="text-xs text-neutral-600">
+      <label className="label">
         Email
-        <input
-          name="email"
-          type="email"
-          required
-          autoComplete="email"
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
-        />
+        <input name="email" type="email" required autoComplete="email" className="field" />
       </label>
-      <label className="text-xs text-neutral-600">
+      <label className="label">
         Password
         <input
           name="password"
@@ -69,19 +58,15 @@ export function AuthForm({ mode }: { mode: 'login' | 'register' }) {
           required
           minLength={8}
           autoComplete={mode === 'login' ? 'current-password' : 'new-password'}
-          className="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+          className="field"
         />
       </label>
       {error && (
-        <p role="alert" className="rounded-md border border-red-200 bg-red-50 p-2.5 text-xs text-red-800">
+        <p role="alert" className="rounded-md border border-danger/20 bg-danger/5 p-2.5 text-xs text-danger">
           {error}
         </p>
       )}
-      <button
-        type="submit"
-        disabled={pending}
-        className="rounded-md bg-neutral-900 px-4 py-2.5 text-sm font-medium text-white hover:bg-neutral-800 disabled:opacity-60"
-      >
+      <button type="submit" disabled={pending} className="btn btn-primary">
         {pending ? 'Working…' : mode === 'login' ? 'Sign in' : 'Create account'}
       </button>
     </form>

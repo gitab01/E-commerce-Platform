@@ -51,8 +51,8 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
         </p>
       </div>
 
-      <section className="max-w-2xl">
-        <h2 className="text-sm font-semibold">Details</h2>
+      <section className="card max-w-2xl p-5">
+        <h2 className="eyebrow">Details</h2>
         <div className="mt-4">
           <ProductForm
             draft={{
@@ -70,14 +70,14 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
       </section>
 
       <section>
-        <h2 className="text-sm font-semibold">Variants</h2>
+        <h2 className="eyebrow">Variants</h2>
         <p className="mt-1 text-sm text-neutral-600">
           Prices are typed in whole Birr and stored as integer cents. Stock set here replaces the count; a negative
           number is refused by the database.
         </p>
-        <ul className="mt-4 divide-y divide-neutral-200 border-y border-neutral-200">
+        <ul className="mt-4 flex flex-col gap-3">
           {product.variants.map((variant) => (
-            <li key={variant.id} className="flex flex-col gap-3 py-4">
+            <li key={variant.id} className="card flex flex-col gap-3 p-5">
               <VariantForm
                 productId={product.id}
                 variant={{
@@ -88,28 +88,31 @@ export default async function EditProductPage(props: { params: Promise<{ id: str
                   stock: variant.stock,
                 }}
               />
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-xs text-neutral-500">
-                  {formatMoney(variant.priceCents)} · {variant.stock} in stock ·{' '}
-                  {soldByVariant.get(variant.id) ?? 0} sold
+              <div className="flex flex-wrap items-center justify-between gap-2 border-t border-line pt-3">
+                <span className="flex flex-wrap items-center gap-2 text-xs text-neutral-500">
+                  <span className="tabular-nums">{formatMoney(variant.priceCents)}</span>
+                  <span className={`pill ${variant.stock === 0 ? 'pill-danger' : 'pill-neutral'}`}>
+                    {variant.stock} in stock
+                  </span>
+                  <span className="tabular-nums">{soldByVariant.get(variant.id) ?? 0} sold</span>
                 </span>
                 <DeleteControl kind="variant" id={variant.id} label="Delete variant" />
               </div>
             </li>
           ))}
           {product.variants.length === 0 && (
-            <li className="py-4 text-sm text-neutral-500">No variants yet — add one below.</li>
+            <li className="card px-5 py-6 text-sm text-neutral-500">No variants yet — add one below.</li>
           )}
         </ul>
-        <div className="mt-5 rounded-lg border border-dashed border-neutral-300 p-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-neutral-500">Add a variant</h3>
+        <div className="card mt-4 p-5">
+          <h3 className="eyebrow">Add a variant</h3>
           <div className="mt-3">
             <VariantForm productId={product.id} />
           </div>
         </div>
       </section>
 
-      <section className="rounded-lg border border-neutral-200 p-5">
+      <section className="card p-5">
         <h2 className="text-sm font-semibold">Delete this product</h2>
         <p className="mt-1 max-w-xl text-sm text-neutral-600">
           {soldLines > 0

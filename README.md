@@ -105,6 +105,12 @@ tracking, account and admin are dynamic by design.
 
 ## Deployment (Vercel)
 
+- `shega-market` (team `abelink2119s-projects`, live at `https://shega-market.vercel.app`) is the
+  **only** Vercel project for this code. It is connected to `gitab01/E-commerce-Platform` branch
+  `main`, so every push to `main` is a production deploy — no `vercel --prod` needed. Running the
+  CLI without `--project shega-market` from an unlinked folder silently creates a throwaway project
+  named after that folder; that is how `web` and `e-commerce-platform` appeared, and both were
+  deleted on 2026-10-09.
 - Build command `vercel-build` runs `prisma generate && prisma migrate deploy && next build`; migrations never run at
   application startup.
 - `vercel.json` schedules `/api/cron/reconcile` daily at 03:00 UTC; the route requires `Authorization: Bearer $CRON_SECRET`.
